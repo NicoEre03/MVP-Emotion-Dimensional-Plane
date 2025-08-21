@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Dimensional Plane - Recording Mode</title>
+    <style>
+        /* General styling for the page */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 1 / 1;
+            margin: 20px auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #chart {
+            width: calc(100% - 40px);
+            height: calc(100% - 40px);
+            margin: 20px;
+            cursor: pointer;
+        }
+
+        .axis-label {
+            position: absolute;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
+
+        .axis-label.x-positive {
+            bottom: 15px;
+            right: 40px;
+        }
+
+        .axis-label.x-negative {
+            bottom: 15px;
+            left: 40px;
+        }
+
+        .axis-label.y-positive {
+            left: 5px;
+            top: 15px;
+        }
+
+        .axis-label.y-negative {
+            left: 5px;
+            bottom: 15px;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        #message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff6b6b;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease, top 0.3s ease;
+            pointer-events: none;
+        }
+
+        #message-box.show {
+            opacity: 1;
+            top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Emotion Recording</h1>
+        <p class="subtitle" id="subtitle-text">Click to select • Double-click to increase dominance • Right-click to decrease/deselect</p>
+        
+        <div class="chart-container">
+            <canvas id="chart"></canvas>
+            <div class="axis-label x-positive">Pleasant</div>
+            <div class="axis-label x-negative">Unpleasant</div>
+            <div class="axis-label y-positive">Active</div>
+            <div class="axis-label y-negative">Passive</div>
+        </div>
+        
+        <div id="message-box"></div>
+
+        <div class="info-panel">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button onclick="downloadState()">Download State</button>
+                <button onclick="submitState()">Submit State</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global state variables ---
+        const currentMode = 'recording'; // This is now fixed
+        let energy = 100;
+        
+        // Hardcoded settings from the provided JSON file
+        const recordingSettings = {
+            "totalEnergy": 100,
+            "activationCost": 10,
+            "resizeCost": 15,
+            "ringMultipliers": [1, 1.2, 1.5, 2],
+            "rules": [
+                { "trigger": 1, "constraints": [4, 5, 6] },
+                { "trigger": 2, "constraints": [4, 5, 6] },
+                { "trigger": 3, "constraints": [7] },
+                { "trigger": 4, "constraints": [1, 2, 3] },
+                { "trigger": 5, "constraints": [1, 2, 8] },
+                { "trigger": 6, "constraints": [1, 2, 7] },
+                { "trigger": 7, "constraints": [3, 4] },
+                { "trigger": 8, "constraints": [3, 4, 5] }
+            ]
+        };
+        energy = recordingSettings.totalEnergy;
+
+        // Emotion data with coordinates from the provided CSV file
+        let emotionsData = [
+            {emotion: "acceptance", x: -12, y: -46}, {emotion: "admiration", x: -52, y: -52},
+            {emotion: "adventurous", x: -52, y: 76}, {emotion: "alarmed", x: 25, y: 63},
+            {emotion: "amazement", x: -93, y: 17}, {emotion: "ambitious", x: -100, y: 93},
+            {emotion: "Angry", x: 52, y: 44}, {emotion: "annoyed", x: 24, y: 8},
+            {emotion: "anxious", x: 33, y: 79}, {emotion: "apathetic", x: 18, y: -29},
+            {emotion: "apprehensive", x: 8, y: 33}, {emotion: "astonished", x: -64, y: 62},
+            {emotion: "attentive", x: -71, y: -7}, {emotion: "bitter", x: 100, y: -78},
+            {emotion: "bored", x: 7, y: -17}, {emotion: "calm", x: -17, y: -29},
+            {emotion: "conceited", x: -35, y: 64}, {emotion: "confident", x: -33, y: 56},
+            {emotion: "contemplative", x: -54, y: -76}, {emotion: "contemptuous", x: 62, y: 29},
+            {emotion: "content", x: -32, y: 12}, {emotion: "courageous", x: -100, y: 70},
+            {emotion: "curious", x: -10, y: 32}, {emotion: "dejected", x: 100, y: -88},
+            {emotion: "delighted", x: -65, y: 22}, {emotion: "depressed", x: 74, y: -65},
+            {emotion: "desperate", x: 87, y: -17}, {emotion: "despondent", x: 53, y: -53},
+            {emotion: "determined", x: -100, y: 81}, {emotion: "disappointed", x: 67, y: -21},
+            {emotion: "discontented", x: 45, y: -21}, {emotion: "disgusted", x: 14, y: 21},
+            {emotion: "dissatisfied", x: 35, y: -61}, {emotion: "distressed", x: 89, y: 6},
+            {emotion: "distrustful", x: 18, y: -69}, {emotion: "ecstasy", x: -27, y: 88},
+            {emotion: "embarrassed", x: 61, y: -35}, {emotion: "empathetic", x: -44, y: -19},
+            {emotion: "enthusiastic", x: -65, y: 100}, {emotion: "envious", x: 42, y: 27},
+            {emotion: "excited", x: -11, y: 67}, {emotion: "expectant", x: -10, y: 49},
+            {emotion: "Fear", x: 100, y: 100}, {emotion: "feel guilt", x: 50, y: -75},
+            {emotion: "frustrated", x: 88, y: 23}, {emotion: "grateful", x: -82, y: -38},
+            {emotion: "grief", x: 44, y: -88}, {emotion: "Happy", x: -31, y: 32},
+            {emotion: "hesitant", x: 27, y: -44}, {emotion: "hopeful", x: -48, y: 27},
+            {emotion: "impatient", x: 31, y: 42}, {emotion: "impressed", x: -24, y: 44},
+            {emotion: "indignant", x: 69, y: 9}, {emotion: "insulted", x: 69, y: -7},
+            {emotion: "interested", x: -9, y: 17}, {emotion: "irrelevant", x: 12, y: -48},
+            {emotion: "jealous", x: 50, y: 11}, {emotion: "joyous", x: -51, y: 45},
+            {emotion: "loathing", x: 80, y: 42}, {emotion: "longing", x: -10, y: -92},
+            {emotion: "lusting", x: -87, y: 100}, {emotion: "melancholic", x: 28, y: -85},
+            {emotion: "miserable", x: 86, y: -44}, {emotion: "Neutral", x: 100, y: 88},
+            {emotion: "panic", x: 22, y: 92}, {emotion: "peaceful", x: -28, y: -11},
+            {emotion: "pleased", x: -49, y: 7}, {emotion: "rage", x: 72, y: 59},
+            {emotion: "relaxed", x: -10, y: -16}, {emotion: "Sad", x: 37, y: -33},
+            {emotion: "satisfied", x: -31, y: -56}, {emotion: "serene", x: -19, y: 4},
+            {emotion: "serious", x: 25, y: -9}, {emotion: "startled", x: 10, y: 67},
+            {emotion: "submission", x: 0, y: -60}, {emotion: "Surprise", x: -9, y: 83},
+            {emotion: "suspicious", x: 13, y: 44}, {emotion: "taken aback", x: 95, y: -100},
+            {emotion: "tense", x: 36, y: 54}, {emotion: "terror", x: 8, y: 87},
+            {emotion: "tired", x: -100, y: -96}, {emotion: "triumphant", x: -78, y: 44},
+            {emotion: "trust", x: -60, y: -33}, {emotion: "vigilant", x: 54, y: 70},
+            {emotion: "wavering", x: 100, y: -68}, {emotion: "worried", x: 48, y: -11},
+        ].map(e => ({ ...e, isBold: false, originalEmotion: e.emotion, isSelected: false, dominanceLevel: 0 }));
+
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth - 40;
+            canvas.height = container.clientHeight - 40;
+            draw();
+        }
+
+        function dataToCanvas(x, y) {
+            const canvasX = (x + 120) * canvas.width / 240;
+            const canvasY = (120 - y) * canvas.height / 240;
+            return {x: canvasX, y: canvasY};
+        }
+
+        function getEmotionColor(x, y, isSelectedInRecording) {
+            if (!isSelectedInRecording) {
+                return '#cccccc';
+            }
+
+            const radius = Math.sqrt(x * x + y * y);
+
+            if (radius <= 20) {
+                return 'hsl(50, 80%, 60%)';
+            }
+
+            let angle = Math.atan2(y, x) * (180 / Math.PI);
+            if (angle < 0) {
+                angle += 360;
+            }
+            
+            const hue = Math.round((angle - 45 + 360) % 360);
+
+            let saturation;
+            if (radius <= 40) saturation = 50;
+            else if (radius <= 60) saturation = 65;
+            else if (radius <= 80) saturation = 80;
+            else saturation = 100;
+
+            const lightness = 55;
+
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+
+        function getSector(emotion) {
+            let angle = Math.atan2(emotion.y, emotion.x) * (180 / Math.PI);
+            if (angle < 0) angle += 360;
+            return Math.floor(angle / 45) + 1;
+        }
+
+        function getRing(emotion) {
+            const radius = Math.sqrt(emotion.x * emotion.x + emotion.y * emotion.y);
+            if (radius <= 20) return 0;
+            if (radius <= 40) return 1;
+            if (radius <= 60) return 2;
+            if (radius <= 80) return 3;
+            return 4;
+        }
+
+        function getConstrainedSectors() {
+            const constrained = new Set();
+            const selectedEmotions = emotionsData.filter(e => e.isSelected);
+
+            for (const emotion of selectedEmotions) {
+                const sector = getSector(emotion);
+                const rule = recordingSettings.rules.find(r => r.trigger === sector);
+                if (rule) {
+                    rule.constraints.forEach(s => constrained.add(s));
+                }
+            }
+            return Array.from(constrained);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            const constrainedSectors = getConstrainedSectors();
+            if (constrainedSectors.length > 0) {
+                ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+                const sectorVertices = [
+                    null,
+                    { p1: { x: 120, y: 0 }, p2: { x: 120, y: 120 } },
+                    { p1: { x: 120, y: 120 }, p2: { x: 0, y: 120 } },
+                    { p1: { x: 0, y: 120 }, p2: { x: -120, y: 120 } },
+                    { p1: { x: -120, y: 120 }, p2: { x: -120, y: 0 } },
+                    { p1: { x: -120, y: 0 }, p2: { x: -120, y: -120 } },
+                    { p1: { x: -120, y: -120 }, p2: { x: 0, y: -120 } },
+                    { p1: { x: 0, y: -120 }, p2: { x: 120, y: -120 } },
+                    { p1: { x: 120, y: -120 }, p2: { x: 120, y: 0 } }
+                ];
+
+                for (const sector of constrainedSectors) {
+                    const vertices = sectorVertices[sector];
+                    if (!vertices) continue;
+
+                    const p1Canvas = dataToCanvas(vertices.p1.x, vertices.p1.y);
+                    const p2Canvas = dataToCanvas(vertices.p2.x, vertices.p2.y);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(p1Canvas.x, p1Canvas.y);
+                    ctx.lineTo(p2Canvas.x, p2Canvas.y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+            
+            ctx.strokeStyle = '#d0d0d0';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            for (let radius = 20; radius <= 100; radius += 20) {
+                ctx.beginPath();
+                const minDimension = Math.min(canvas.width, canvas.height);
+                const canvasRadius = (radius / 120) * (minDimension / 2);
+                ctx.arc(centerX, centerY, canvasRadius, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.moveTo(canvas.width, 0);
+            ctx.lineTo(0, canvas.height);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+            
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 12; i++) {
+                const x = (canvas.width / 12) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i <= 12; i++) {
+                const y = (canvas.height / 12) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#888';
+            ctx.font = '11px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const xValues = [-120, -100, -75, -50, -25, 0, 25, 50, 75, 100, 120];
+            xValues.forEach(val => {
+                const x = dataToCanvas(val, 0).x;
+                ctx.fillText(val.toString(), x, canvas.height / 2 + 5);
+            });
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const yValues = [-120, -100, -75, -50, -25, 25, 50, 75, 100, 120];
+            yValues.forEach(val => {
+                const y = dataToCanvas(0, val).y;
+                ctx.fillText(val.toString(), canvas.width / 2 + 5, y);
+            });
+            
+            const maxOrbRadius = 40;
+            const orbRadius = maxOrbRadius * (energy / recordingSettings.totalEnergy);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, orbRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(102, 126, 234, 0.5)';
+            ctx.stroke();
+
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(energy, centerX, centerY);
+
+            emotionsData.forEach(emotion => {
+                const pos = dataToCanvas(emotion.x, emotion.y);
+                const color = getEmotionColor(emotion.x, emotion.y, emotion.isSelected);
+                const radius = 6 + (emotion.dominanceLevel * 3);
+                
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                
+                const primaryEmotions = ['Happy', 'Sad', 'Angry', 'Fear', 'Surprise', 'Neutral'];
+                let fontDeclaration = '';
+                if (emotion.isBold) fontDeclaration += 'bold ';
+
+                if (primaryEmotions.includes(emotion.originalEmotion)) {
+                    ctx.fillStyle = '#333';
+                    fontDeclaration += '11px Arial';
+                } else if (emotion.userAdded) {
+                    ctx.fillStyle = '#0066cc';
+                    fontDeclaration += 'italic 10px Arial';
+                } else {
+                    ctx.fillStyle = '#555';
+                    fontDeclaration += '10px Arial';
+                }
+                ctx.font = fontDeclaration;
+                
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                
+                const textWidth = ctx.measureText(emotion.emotion).width;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillRect(pos.x - textWidth/2 - 2, pos.y - (radius + 14), textWidth + 4, 12);
+                
+                if (primaryEmotions.includes(emotion.originalEmotion)) ctx.fillStyle = '#333';
+                else if (emotion.userAdded) ctx.fillStyle = '#0066cc';
+                else ctx.fillStyle = '#555';
+                
+                ctx.fillText(emotion.emotion, pos.x, pos.y - (radius + 2));
+            });
+        }
+
+        function getEmotionAt(canvasX, canvasY) {
+            for (let i = emotionsData.length - 1; i >= 0; i--) {
+                const emotion = emotionsData[i];
+                const pos = dataToCanvas(emotion.x, emotion.y);
+                const radius = 6 + (emotion.dominanceLevel * 3);
+                const dist = Math.sqrt(Math.pow(pos.x - canvasX, 2) + Math.pow(pos.y - canvasY, 2));
+                if (dist <= radius + 2) {
+                    return emotion;
+                }
+            }
+            return null;
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const emotion = getEmotionAt(x, y);
+
+            if (emotion && !emotion.isSelected) {
+                const constrainedSectors = getConstrainedSectors();
+                const clickedSector = getSector(emotion);
+                if (constrainedSectors.includes(clickedSector)) {
+                    showMessage("This emotion is constrained by your other selections.");
+                    return;
+                }
+
+                const ring = getRing(emotion);
+                const cost = Math.round(recordingSettings.activationCost * (recordingSettings.ringMultipliers[ring - 1] || 1));
+
+                if (energy >= cost) {
+                    energy -= cost;
+                    emotion.isSelected = true;
+                } else {
+                    showMessage("Not enough energy to select.");
+                }
+                draw();
+            }
+        });
+
+        canvas.addEventListener('dblclick', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const emotion = getEmotionAt(x, y);
+
+            if (emotion && emotion.isSelected && emotion.dominanceLevel < 3) {
+                const ring = getRing(emotion);
+                const cost = Math.round(recordingSettings.resizeCost * (recordingSettings.ringMultipliers[ring - 1] || 1));
+                if (energy >= cost) {
+                    energy -= cost;
+                    emotion.dominanceLevel++;
+                    draw();
+                } else {
+                    showMessage("Not enough energy to increase dominance.");
+                }
+            }
+        });
+        
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const emotion = getEmotionAt(x, y);
+
+            if (emotion && emotion.isSelected) {
+                const ring = getRing(emotion);
+                if (emotion.dominanceLevel > 0) {
+                    const refund = Math.round(recordingSettings.resizeCost * (recordingSettings.ringMultipliers[ring - 1] || 1));
+                    energy += refund;
+                    emotion.dominanceLevel--;
+                } else {
+                    const refund = Math.round(recordingSettings.activationCost * (recordingSettings.ringMultipliers[ring - 1] || 1));
+                    energy += refund;
+                    emotion.isSelected = false;
+                }
+                draw();
+            }
+        });
+
+        let messageTimer;
+        function showMessage(text, type = 'error') {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = text;
+            messageBox.style.backgroundColor = type === 'error' ? '#ff6b6b' : (type === 'success' ? '#4ecdc4' : '#6c757d');
+            messageBox.classList.add('show');
+            clearTimeout(messageTimer);
+            messageTimer = setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+
+        function createStateObject() {
+            const recordedState = emotionsData
+                .filter(e => e.isSelected)
+                .map(e => ({
+                    emotion: e.originalEmotion,
+                    dominanceLevel: e.dominanceLevel
+                }));
+
+            return {
+                recordedState: recordedState,
+                remainingEnergy: energy,
+                emotionMapSnapshot: emotionsData.map(({ emotion, originalEmotion, x, y, userAdded, isBold }) => ({ emotion, originalEmotion, x, y, userAdded, isBold })),
+                settingsSnapshot: JSON.parse(JSON.stringify(recordingSettings))
+            };
+        }
+
+        function downloadState() {
+            const stateObject = createStateObject();
+            const stateString = JSON.stringify(stateObject, null, 2);
+            const blob = new Blob([stateString], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+            link.download = `emotional_state_${timestamp}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function submitState() {
+            const stateObject = createStateObject();
+            const webhookUrl = 'https://n8n.srv968843.hstgr.cloud/webhook-test/journal-entry';
+
+            showMessage("Submitting state...", "info");
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(stateObject)
+                });
+
+                if (response.ok) {
+                    showMessage("Submission successful!", "success");
+                } else {
+                    const errorText = await response.text();
+                    showMessage(`Submission failed: ${response.status} ${response.statusText}. ${errorText}`, "error");
+                }
+            } catch (error) {
+                showMessage(`Submission failed: Network error. ${error.message}`, "error");
+            }
+        }
+
+        // Initialize
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
+</body>
+</html>
