@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Dimensional Plane</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .modes-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .mode-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .mode-card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .footer {
+            color: #999;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Emotion Dimensional Plane</h1>
+        <p class="subtitle">
+            Interactive tool for visualizing and journaling emotional states using a two-dimensional scatter plot where X-axis represents valence (unpleasant to pleasant) and Y-axis represents arousal (passive to active).
+        </p>
+        
+        <div class="modes-grid">
+            <a href="mapping.html" class="mode-card">
+                <h3>Mapping Mode</h3>
+                <p>Customize your emotion map by positioning, adding, and organizing emotions on the dimensional plane. Download and upload emotion coordinates.</p>
+            </a>
+            
+            <a href="recording.html" class="mode-card">
+                <h3>Recording Mode</h3>
+                <p>Journal your current emotional state using the energy system. Select emotions and adjust their dominance levels to capture your feelings.</p>
+            </a>
+            
+            <a href="heatmap.html" class="mode-card">
+                <h3>Heatmap Viewer</h3>
+                <p>Visualize emotional patterns and trends over time through aggregated data representation and heat map overlays.</p>
+            </a>
+        </div>
+        
+        <div class="footer">
+            Personal Emotion Journaling System
+        </div>
+    </div>
+</body>
+</html>
