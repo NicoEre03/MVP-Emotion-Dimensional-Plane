@@ -457,12 +457,12 @@
         // NEW - Function to load data from URL via webhook
         async function loadDataFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            // FIX 1: Look for 'heatmap_id' in the URL, not 'id'
+            // Look for 'heatmap_id' in the URL
             const heatmapId = urlParams.get('heatmap_id');
 
             if (heatmapId) {
-                // Use the new webhook URL with "heatmap_plus_id"
-                const webhookUrl = `https://n8n.srv968843.hstgr.cloud/webhook-test/heatmap_plus_id?id=${heatmapId}`;
+                // Use 'heatmap_id' in the webhook URL
+                const webhookUrl = `https://n8n.srv968843.hstgr.cloud/webhook-test/heatmap_plus_id?heatmap_id=${heatmapId}`;
                 showMessage('Fetching heatmap data...', 'info');
 
                 try {
@@ -492,5 +492,6 @@
     </script>
 </body>
 </html>
+
 
 
