@@ -123,6 +123,13 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
+        
+        button.secondary {
+            background: #a0aec0;
+        }
+        button.secondary:hover {
+            background: #718096;
+        }
 
         #message-box {
             position: fixed;
@@ -163,6 +170,8 @@
 
         <div class="info-panel">
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                <button class="secondary" onclick="document.getElementById('csvFileInput').click()">Upload Coordinates</button>
                 <button onclick="downloadState()">Download State</button>
                 <button onclick="submitState()">Submit State</button>
             </div>
@@ -197,52 +206,51 @@
         let emotionsData = [
             {emotion: "acceptance", x: -12, y: -46}, {emotion: "admiration", x: -52, y: -52},
             {emotion: "adventurous", x: -52, y: 76}, {emotion: "alarmed", x: 25, y: 63},
-            {emotion: "amazement", x: -93, y: 17}, {emotion: "ambitious", x: -100, y: 93},
+            {emotion: "amazement", x: -93, y: 17}, {emotion: "amusement", x: -28, y: 58},
             {emotion: "Angry", x: 52, y: 44}, {emotion: "annoyed", x: 24, y: 8},
             {emotion: "anxious", x: 33, y: 79}, {emotion: "apathetic", x: 18, y: -29},
             {emotion: "apprehensive", x: 8, y: 33}, {emotion: "astonished", x: -64, y: 62},
-            {emotion: "attentive", x: -71, y: -7}, {emotion: "bitter", x: 100, y: -78},
-            {emotion: "bored", x: 7, y: -17}, {emotion: "calm", x: -17, y: -29},
-            {emotion: "conceited", x: -35, y: 64}, {emotion: "confident", x: -33, y: 56},
-            {emotion: "contemplative", x: -54, y: -76}, {emotion: "contemptuous", x: 62, y: 29},
-            {emotion: "content", x: -32, y: 12}, {emotion: "courageous", x: -100, y: 70},
-            {emotion: "curious", x: -10, y: 32}, {emotion: "dejected", x: 100, y: -88},
-            {emotion: "delighted", x: -65, y: 22}, {emotion: "depressed", x: 74, y: -65},
-            {emotion: "desperate", x: 87, y: -17}, {emotion: "despondent", x: 53, y: -53},
-            {emotion: "determined", x: -100, y: 81}, {emotion: "disappointed", x: 67, y: -21},
+            {emotion: "attentive", x: -71, y: -7}, {emotion: "bored", x: 7, y: -17},
+            {emotion: "calm", x: -17, y: -29}, {emotion: "conceited", x: -43, y: 62},
+            {emotion: "confident", x: -40, y: 52}, {emotion: "contemplative", x: -54, y: -76},
+            {emotion: "contemptuous", x: 62, y: 29}, {emotion: "content", x: -32, y: 12},
+            {emotion: "curious", x: -10, y: 32}, {emotion: "delighted", x: -65, y: 22},
+            {emotion: "depressed", x: 74, y: -65}, {emotion: "desperate", x: 87, y: -17},
+            {emotion: "despondent", x: 53, y: -53}, {emotion: "disappointed", x: 67, y: -21},
             {emotion: "discontented", x: 45, y: -21}, {emotion: "disgusted", x: 14, y: 21},
             {emotion: "dissatisfied", x: 35, y: -61}, {emotion: "distressed", x: 89, y: 6},
             {emotion: "distrustful", x: 18, y: -69}, {emotion: "ecstasy", x: -27, y: 88},
             {emotion: "embarrassed", x: 61, y: -35}, {emotion: "empathetic", x: -44, y: -19},
-            {emotion: "enthusiastic", x: -65, y: 100}, {emotion: "envious", x: 42, y: 27},
-            {emotion: "excited", x: -11, y: 67}, {emotion: "expectant", x: -10, y: 49},
-            {emotion: "Fear", x: 100, y: 100}, {emotion: "feel guilt", x: 50, y: -75},
-            {emotion: "frustrated", x: 88, y: 23}, {emotion: "grateful", x: -82, y: -38},
-            {emotion: "grief", x: 44, y: -88}, {emotion: "Happy", x: -31, y: 32},
-            {emotion: "hesitant", x: 27, y: -44}, {emotion: "hopeful", x: -48, y: 27},
-            {emotion: "impatient", x: 31, y: 42}, {emotion: "impressed", x: -24, y: 44},
-            {emotion: "indignant", x: 69, y: 9}, {emotion: "insulted", x: 69, y: -7},
-            {emotion: "interested", x: -9, y: 17}, {emotion: "irrelevant", x: 12, y: -48},
-            {emotion: "jealous", x: 50, y: 11}, {emotion: "joyous", x: -51, y: 45},
-            {emotion: "loathing", x: 80, y: 42}, {emotion: "longing", x: -10, y: -92},
-            {emotion: "lusting", x: -87, y: 100}, {emotion: "melancholic", x: 28, y: -85},
-            {emotion: "miserable", x: 86, y: -44}, {emotion: "Neutral", x: 100, y: 88},
-            {emotion: "panic", x: 22, y: 92}, {emotion: "peaceful", x: -28, y: -11},
-            {emotion: "pleased", x: -49, y: 7}, {emotion: "rage", x: 72, y: 59},
-            {emotion: "relaxed", x: -10, y: -16}, {emotion: "Sad", x: 37, y: -33},
-            {emotion: "satisfied", x: -31, y: -56}, {emotion: "serene", x: -19, y: 4},
-            {emotion: "serious", x: 25, y: -9}, {emotion: "startled", x: 10, y: 67},
-            {emotion: "submission", x: 0, y: -60}, {emotion: "Surprise", x: -9, y: 83},
-            {emotion: "suspicious", x: 13, y: 44}, {emotion: "taken aback", x: 95, y: -100},
-            {emotion: "tense", x: 36, y: 54}, {emotion: "terror", x: 8, y: 87},
-            {emotion: "tired", x: -100, y: -96}, {emotion: "triumphant", x: -78, y: 44},
-            {emotion: "trust", x: -60, y: -33}, {emotion: "vigilant", x: 54, y: 70},
-            {emotion: "wavering", x: 100, y: -68}, {emotion: "worried", x: 48, y: -11},
+            {emotion: "envious", x: 42, y: 27}, {emotion: "excited", x: -11, y: 67},
+            {emotion: "expectant", x: -10, y: 49}, {emotion: "Fear", x: 100, y: 100},
+            {emotion: "feel guilt", x: 50, y: -75}, {emotion: "frustrated", x: 88, y: 23},
+            {emotion: "grateful", x: -82, y: -38}, {emotion: "grief", x: 44, y: -88},
+            {emotion: "Happy", x: -31, y: 32}, {emotion: "hesitant", x: 27, y: -44},
+            {emotion: "hopeful", x: -48, y: 27}, {emotion: "impatient", x: 31, y: 42},
+            {emotion: "impressed", x: -24, y: 44}, {emotion: "indignant", x: 69, y: 9},
+            {emotion: "insulted", x: 69, y: -7}, {emotion: "interested", x: -9, y: 17},
+            {emotion: "irrelevant", x: 12, y: -48}, {emotion: "jealous", x: 50, y: 11},
+            {emotion: "joyous", x: -51, y: 45}, {emotion: "loathing", x: 80, y: 42},
+            {emotion: "longing", x: -10, y: -92}, {emotion: "lusting", x: -87, y: 100},
+            {emotion: "melancholic", x: 28, y: -85}, {emotion: "miserable", x: 86, y: -44},
+            {emotion: "Neutral", x: 0, y: 0}, {emotion: "panic", x: 22, y: 92},
+            {emotion: "peaceful", x: -28, y: -11}, {emotion: "pleased", x: -49, y: 7},
+            {emotion: "rage", x: 72, y: 59}, {emotion: "relaxed", x: -10, y: -16},
+            {emotion: "Sad", x: 37, y: -33}, {emotion: "satisfied", x: -31, y: -56},
+            {emotion: "serene", x: -19, y: 4}, {emotion: "serious", x: 25, y: -9},
+            {emotion: "startled", x: 10, y: 67}, {emotion: "submission", x: 0, y: -60},
+            {emotion: "Surprise", x: -9, y: 83}, {emotion: "suspicious", x: 13, y: 44},
+            {emotion: "taken aback", x: 95, y: -100}, {emotion: "tense", x: 36, y: 54},
+            {emotion: "terror", x: 8, y: 87}, {emotion: "tired", x: -100, y: -96},
+            {emotion: "triumphant", x: -78, y: 44}, {emotion: "trust", x: -60, y: -33},
+            {emotion: "vigilant", x: 54, y: 70}, {emotion: "wavering", x: 100, y: -68},
+            {emotion: "worried", x: 48, y: -11}
         ].map(e => ({ ...e, isBold: false, originalEmotion: e.emotion, isSelected: false, dominanceLevel: 0 }));
 
         const canvas = document.getElementById('chart');
         const ctx = canvas.getContext('2d');
-        
+        const csvFileInput = document.getElementById('csvFileInput');
+
         function resizeCanvas() {
             const container = canvas.parentElement;
             canvas.width = container.clientWidth - 40;
@@ -564,6 +572,66 @@
             }, 3000);
         }
 
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                parseCSV(e.target.result);
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function parseCSV(text) {
+            const newEmotions = [];
+            const lines = text.split(/\r\n|\n/);
+            const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const emotionIndex = header.indexOf('emotion');
+            const xIndex = header.indexOf('x');
+            const yIndex = header.indexOf('y');
+
+            if (emotionIndex === -1 || xIndex === -1 || yIndex === -1) {
+                showMessage('Invalid CSV. Header must contain "emotion", "X", and "Y".');
+                return;
+            }
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                // Simple split, may not handle commas in emotion names
+                const data = lines[i].split(',');
+                const emotionName = data[emotionIndex]?.trim().replace(/"/g, '');
+                const x = parseInt(data[xIndex], 10);
+                const y = parseInt(data[yIndex], 10);
+
+                if (!emotionName || isNaN(x) || isNaN(y)) {
+                    showMessage(`Skipping invalid row ${i + 1}: ${lines[i]}`);
+                    continue;
+                }
+
+                newEmotions.push({
+                    emotion: emotionName,
+                    originalEmotion: emotionName,
+                    x: Math.max(-100, Math.min(100, x)),
+                    y: Math.max(-100, Math.min(100, y)),
+                    isBold: false,
+                    isSelected: false,
+                    dominanceLevel: 0
+                });
+            }
+            
+            if (newEmotions.length === 0) {
+                showMessage('No valid emotion data found in the uploaded file.');
+                return;
+            }
+
+            emotionsData = newEmotions;
+            // Reset any selections and energy
+            energy = recordingSettings.totalEnergy;
+            draw();
+            showMessage('Successfully loaded new emotion coordinates!', 'success');
+        }
+
         function createStateObject() {
             const recordedState = emotionsData
                 .filter(e => e.isSelected)
@@ -621,7 +689,9 @@
 
         // Initialize
         window.addEventListener('resize', resizeCanvas);
+        csvFileInput.addEventListener('change', handleFileUpload, false);
         resizeCanvas();
     </script>
 </body>
 </html>
+
