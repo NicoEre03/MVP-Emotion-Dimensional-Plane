@@ -237,6 +237,8 @@
         let pastValue = 0;
         let presentValue = 0;
         let futureValue = 0;
+        let currentUserMapId = 'default';
+        let currentSettingsId = 'default';
         
         // Default settings, can be overwritten by fetched data
         let recordingSettings = {
@@ -699,15 +701,16 @@
                 }));
 
             return {
-                recordedState: recordedState,
-                remainingEnergy: energy,
-                temporalFocus: {
+                Timestamp: new Date().toISOString(),
+                Selected_Emotions: recordedState,
+                Remaining_Energy: energy,
+                Temporal_Focus: {
                     past: pastValue,
                     present: presentValue,
                     future: futureValue
                 },
-                emotionMapSnapshot: emotionsData.map(({ emotion, originalEmotion, x, y, userAdded, isBold }) => ({ emotion, originalEmotion, x, y, userAdded, isBold })),
-                settingsSnapshot: JSON.parse(JSON.stringify(recordingSettings))
+                User_Map_ID_Used: currentUserMapId,
+                User_Settings_ID_Used: currentSettingsId
             };
         }
 
@@ -754,6 +757,9 @@
             const urlParams = new URLSearchParams(window.location.search);
             const userMapId = urlParams.get('user_map_id');
             const settingsId = urlParams.get('settings_id');
+
+            currentUserMapId = userMapId || 'default';
+            currentSettingsId = settingsId || 'default';
 
             if (userMapId && settingsId) {
                 const webhookUrl = `https://n8n.srv968843.hstgr.cloud/webhook-test/map-settings_id?user_map_id=${userMapId}&settings_id=${settingsId}`;
