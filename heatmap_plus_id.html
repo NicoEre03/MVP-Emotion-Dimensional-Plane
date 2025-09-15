@@ -152,6 +152,53 @@
             opacity: 1;
             top: 30px;
         }
+
+        .sliders-container {
+            max-width: 800px;
+            margin: 20px auto 0;
+            padding: 20px 15px 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .slider-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slider-group label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+        }
+        .slider-group .slider-value {
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .summary-container {
+            max-width: 800px;
+            margin: 15px auto 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -168,6 +215,28 @@
         </div>
 
         <div id="message-box"></div>
+
+        <div class="sliders-container">
+            <div class="slider-group">
+                <label for="past-slider">Avg Past (memory)</label>
+                <input type="range" id="past-slider" min="0" max="10" value="0" step="0.1" disabled>
+                <span id="past-value" class="slider-value">0</span>
+            </div>
+            <div class="slider-group">
+                <label for="present-slider">Avg Present</label>
+                <input type="range" id="present-slider" min="0" max="10" value="0" step="0.1" disabled>
+                <span id="present-value" class="slider-value">0</span>
+            </div>
+            <div class="slider-group">
+                <label for="future-slider">Avg Future (visualization)</label>
+                <input type="range" id="future-slider" min="0" max="10" value="0" step="0.1" disabled>
+                <span id="future-value" class="slider-value">0</span>
+            </div>
+        </div>
+
+        <div class="summary-container">
+            <p id="week-summary">Loading summary...</p>
+        </div>
 
         <div class="info-panel">
             <input type="file" id="paletteInput" accept=".json" style="display: none;">
@@ -381,18 +450,30 @@
         // NEW - Refactored function to process data from any source (file upload or URL fetch)
         function processAndDrawHeatmap(data) {
              if (data && data.fullTerritoryMap && typeof data.avgEnergyUsed !== 'undefined') {
-                data.fullTerritoryMap.forEach(t => {
-                    if (typeof t.polygon === 'string') {
-                        try {
-                            t.polygon = JSON.parse(t.polygon);
-                        } catch(e) {
-                             console.error("Failed to parse polygon string for emotion:", t.emotion);
-                             t.polygon = null; // Set polygon to null if parsing fails
-                        }
-                    }
-                });
                 masterData = data;
                 rankedTerritories = masterData.fullTerritoryMap.filter(t => t.stats).sort((a, b) => a.stats.appearances - b.stats.appearances);
+
+                if (data.avgTemporalFocus) {
+                    const { past, present, future } = data.avgTemporalFocus;
+                    const pastSlider = document.getElementById('past-slider');
+                    const presentSlider = document.getElementById('present-slider');
+                    const futureSlider = document.getElementById('future-slider');
+                    const pastValueSpan = document.getElementById('past-value');
+                    const presentValueSpan = document.getElementById('present-value');
+                    const futureValueSpan = document.getElementById('future-value');
+
+                    pastSlider.value = past;
+                    pastValueSpan.textContent = past.toFixed(1);
+                    presentSlider.value = present;
+                    presentValueSpan.textContent = present.toFixed(1);
+                    futureSlider.value = future;
+                    futureValueSpan.textContent = future.toFixed(1);
+                }
+
+                if (data.weekSummary) {
+                    document.getElementById('week-summary').textContent = data.weekSummary;
+                }
+                
                 showMessage('Heatmap data loaded successfully!', 'success');
                 draw();
             } else {
@@ -492,6 +573,5 @@
     </script>
 </body>
 </html>
-
 
 
