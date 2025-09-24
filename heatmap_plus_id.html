@@ -5,8 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emotion Dimensional Plane - Heatmap Viewer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* General styling for the page */
+        :root {
+            --bg-dark-start: #1a1a1a;
+            --bg-dark-end: #1a1a1a;
+            --panel-bg: #1a1a1a;
+            --panel-border: rgba(218, 217, 244, 0.2);
+            --text-light: #e0e0e0;
+            --text-secondary: #a0a0b0;
+            --accent-primary: #dad9f4;
+            --accent-glow: rgba(218, 217, 244, 0.5);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,36 +27,42 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Jost', sans-serif;
+            background: radial-gradient(circle, var(--bg-dark-end) 0%, var(--bg-dark-start) 100%);
+            color: var(--text-light);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 5px;
         }
 
         .container {
-            background: white;
+            background: var(--panel-bg);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 30px;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 20px;
             max-width: 1200px;
             width: 100%;
+            backdrop-filter: blur(10px);
         }
 
         h1 {
             text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: white;
+            margin-bottom: 8px;
+            font-size: 22px;
+            text-transform: uppercase;
+            font-weight: 700;
         }
 
         .subtitle {
             text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-size: 12px;
+            font-weight: 300;
         }
 
         .chart-container {
@@ -52,112 +71,55 @@
             max-width: 800px;
             aspect-ratio: 1 / 1;
             margin: 20px auto;
-            background: #f8f9fa;
+            background: transparent;
+            border: 1px solid var(--panel-border);
             border-radius: 10px;
             overflow: hidden;
         }
 
         #chart {
-            width: calc(100% - 40px);
-            height: calc(100% - 40px);
-            margin: 20px;
+            width: 100%;
+            height: 100%;
             cursor: default;
         }
 
         .axis-label {
             position: absolute;
-            font-weight: 600;
-            color: #555;
-            font-size: 14px;
-            background: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             pointer-events: none;
         }
 
-        .axis-label.x-positive {
-            bottom: 15px;
-            right: 40px;
+        .axis-label.x-positive { 
+            top: 50%; 
+            right:-18px;
+            transform: translateY(-50%) rotate(-90deg);
         }
-
-        .axis-label.x-negative {
-            bottom: 15px;
-            left: 40px;
+        .axis-label.x-negative { 
+            top: 50%; 
+            left:-23px;
+            transform: translateY(-50%) rotate(-90deg);
         }
-
-        .axis-label.y-positive {
-            left: 5px;
-            top: 15px;
+        .axis-label.y-positive { 
+            top: 5px; 
+            left: 50%; 
+            transform: translateX(-50%); 
         }
-
-        .axis-label.y-negative {
-            left: 5px;
-            bottom: 15px;
-        }
-
-        .info-panel {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        button.secondary {
-            background: #a0aec0;
-        }
-        button.secondary:hover {
-            background: #718096;
-        }
-
-        #message-box {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #ff6b6b;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.3s ease, top 0.3s ease;
-            pointer-events: none;
-        }
-
-        #message-box.show {
-            opacity: 1;
-            top: 30px;
+        .axis-label.y-negative { 
+            bottom: 5px; 
+            left: 50%; 
+            transform: translateX(-50%); 
         }
 
         .sliders-container {
             max-width: 800px;
             margin: 20px auto 0;
-            padding: 20px 15px 10px;
-            background: #f8f9fa;
+            padding: 15px 15px 10px;
+            background: transparent;
+            border: 1px solid var(--panel-border);
             border-radius: 10px;
             display: flex;
             justify-content: space-around;
@@ -173,38 +135,128 @@
         }
 
         .slider-group label {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 8px;
-            font-weight: 500;
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            font-weight: 400;
         }
-        .slider-group input[type="range"] {
-            width: 100%;
-        }
+        
         .slider-group .slider-value {
-            font-weight: bold;
-            font-family: monospace;
-            font-size: 16px;
-            margin-top: 4px;
+            font-weight:400;
+            font-size: 12px;
+            margin-top:4px;
+            color: var(--accent-primary);
         }
 
-        .summary-container {
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+            outline: none;
+            transition: background 0.1s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: pointer;
+            border: 2px solid var(--bg-dark-start);
+        }
+        
+        input[type="range"]:disabled::-webkit-slider-thumb {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .insights-container {
             max-width: 800px;
-            margin: 15px auto 0;
+            margin: 10px auto 0;
             padding: 15px;
-            background: #f8f9fa;
+            background: transparent;
+            border: 1px solid var(--panel-border);
             border-radius: 10px;
             text-align: center;
-            font-size: 14px;
-            color: #4a5568;
+        }
+        #insights-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 300;
             line-height: 1.5;
+        }
+
+        .info-panel {
+            max-width: 800px;
+            margin: 10px auto 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            background: transparent;
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: var(--accent-glow);
+            color: #1a1a1a;
+        }
+        
+        button.secondary {
+            color: var(--text-secondary);
+            border-color: var(--text-secondary);
+        }
+        button.secondary:hover {
+            background: rgba(160, 160, 176, 0.2);
+            color: white;
+        }
+
+        #message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff6b6b;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease, top 0.3s ease;
+            pointer-events: none;
+        }
+
+        #message-box.show {
+            opacity: 1;
+            top: 30px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Heatmap Viewer</h1>
-        <p class="subtitle" id="subtitle-text">Upload a calculated heatmap file to visualize the data.</p>
+        <p class="subtitle" id="subtitle-text">Visualize aggregated emotional patterns from journal entries.</p>
         
         <div class="chart-container">
             <canvas id="chart"></canvas>
@@ -214,29 +266,29 @@
             <div class="axis-label y-negative">Passive</div>
         </div>
 
-        <div id="message-box"></div>
-
         <div class="sliders-container">
             <div class="slider-group">
-                <label for="past-slider">Avg Past (memory)</label>
-                <input type="range" id="past-slider" min="0" max="10" value="0" step="0.1" disabled>
+                <label for="past-slider">Avg Past</label>
+                <input type="range" id="past-slider" min="0" max="10" value="0" disabled>
                 <span id="past-value" class="slider-value">0</span>
             </div>
             <div class="slider-group">
                 <label for="present-slider">Avg Present</label>
-                <input type="range" id="present-slider" min="0" max="10" value="0" step="0.1" disabled>
+                <input type="range" id="present-slider" min="0" max="10" value="0" disabled>
                 <span id="present-value" class="slider-value">0</span>
             </div>
             <div class="slider-group">
-                <label for="future-slider">Avg Future (visualization)</label>
-                <input type="range" id="future-slider" min="0" max="10" value="0" step="0.1" disabled>
+                <label for="future-slider">Avg Future</label>
+                <input type="range" id="future-slider" min="0" max="10" value="0" disabled>
                 <span id="future-value" class="slider-value">0</span>
             </div>
         </div>
 
-        <div class="summary-container">
-            <p id="week-summary">Loading summary...</p>
+        <div class="insights-container">
+            <p id="insights-text">Loading insights...</p>
         </div>
+
+        <div id="message-box"></div>
 
         <div class="info-panel">
             <input type="file" id="paletteInput" accept=".json" style="display: none;">
@@ -249,40 +301,43 @@
 
     <script>
         // --- Global state variables ---
-        let masterData = {
-            fullTerritoryMap: [],
-            avgEnergyUsed: 0
-        };
+        let masterData = { fullTerritoryMap: [], avgEnergyUsed: 0, avgTemporalFocus: {past: 0, present: 0, future: 0}, weekSummary: "" };
         let rankedTerritories = [];
 
+        // --- NEW DARK MODE COLOR PALETTE ---
         let colorPalette = {
-            zeroColor: "#e5f5ff",
+            zeroColor: "#1f1f2a",
             gradient: [
-                {offset: 0, color: "#2c7bb6"}, {offset: 0.125, color: "#00a6ca"},
-                {offset: 0.25, color: "#00ccbc"}, {offset: 0.375, color: "#90eb9d"},
-                {offset: 0.5, color: "#ffff8c"}, {offset: 0.625, color: "#f9d057"},
-                {offset: 0.75, color: "#f29e2e"}, {offset: 0.875, color: "#e76818"},
-                {offset: 1, color: "#d7191c"}
+                {offset: 0, color: "#2c3e50"}, {offset: 0.25, color: "#4f3a65"},
+                {offset: 0.5, color: "#a75265"}, {offset: 0.75, color: "#f68f51"},
+                {offset: 1, color: "#f9f871"}
             ]
         };
         let colorScale = d3.scaleLinear().domain(colorPalette.gradient.map(s => s.offset)).range(colorPalette.gradient.map(s => s.color));
 
         const canvas = document.getElementById('chart');
         const ctx = canvas.getContext('2d');
-        const heatmapDataInput = document.getElementById('heatmapDataInput');
-        const paletteInput = document.getElementById('paletteInput');
+
+        // Slider and Insights elements
+        const pastSlider = document.getElementById('past-slider');
+        const presentSlider = document.getElementById('present-slider');
+        const futureSlider = document.getElementById('future-slider');
+        const pastValueSpan = document.getElementById('past-value');
+        const presentValueSpan = document.getElementById('present-value');
+        const futureValueSpan = document.getElementById('future-value');
+        const insightsText = document.getElementById('insights-text');
         
         function resizeCanvas() {
             const container = canvas.parentElement;
-            const size = container.clientWidth - 40;
-            canvas.width = size;
-            canvas.height = size;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
             draw();
         }
 
+        const range = 110;
         function dataToCanvas(x, y) {
-            const canvasX = (x + 120) * canvas.width / 240;
-            const canvasY = (120 - y) * canvas.height / 240;
+            const canvasX = (x + range) * canvas.width / (range * 2);
+            const canvasY = (range - y) * canvas.height / (range * 2);
             return {x: canvasX, y: canvasY};
         }
         
@@ -291,9 +346,8 @@
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const minDimension = Math.min(canvas.width, canvas.height);
-            const outerRadius = (100 / 120) * (minDimension / 2);
-            const innerRadius = (20 / 120) * (minDimension / 2);
+            const outerRadius = dataToCanvas(100, 0).x - centerX;
+            const innerRadius = dataToCanvas(20, 0).x - centerX;
 
             ctx.save();
             ctx.beginPath();
@@ -301,14 +355,12 @@
             ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI, true);
             ctx.clip();
 
-            // Draw fills for all territories
             masterData.fullTerritoryMap.forEach(territory => {
                 if (!territory.polygon) return;
-
                 if (territory.stats) {
                     const rankIndex = rankedTerritories.findIndex(rt => rt.emotion === territory.emotion);
                     if (rankIndex !== -1) {
-                        const rank = rankedTerritories.length > 1 ? rankIndex / (rankedTerritories.length - 1) : 1;
+                        const rank = rankedTerritories.length > 1 ? rankIndex / (rankedTerritories.length - 1) : 0.5;
                         ctx.fillStyle = colorScale(rank);
                     }
                 } else {
@@ -324,9 +376,7 @@
                 ctx.closePath();
                 ctx.fill();
             });
-
-            // Draw borders for ALL territories
-            ctx.strokeStyle = '#cccccc'; // Changed to light grey
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.1)';
             ctx.lineWidth = 1;
             masterData.fullTerritoryMap.forEach(territory => {
                 if (!territory.polygon) return;
@@ -339,7 +389,6 @@
                 ctx.closePath();
                 ctx.stroke();
             });
-
             ctx.restore();
         }
 
@@ -348,11 +397,10 @@
             masterData.fullTerritoryMap.forEach(territory => {
                 const dominanceAvg = territory.stats ? territory.stats.dominanceAvg : 0;
                 const pos = dataToCanvas(territory.coordinates.x, territory.coordinates.y);
-                const radius = territory.stats ? (6 + (dominanceAvg * 3)) : 2;
-                
+                const radius = territory.stats ? (4 + (dominanceAvg * 2)) : 2;
                 ctx.beginPath();
                 ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
-                ctx.fillStyle = territory.stats ? '#555555' : '#cccccc';
+                ctx.fillStyle = territory.stats ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)';
                 ctx.fill();
             });
         }
@@ -361,19 +409,14 @@
             if (masterData.fullTerritoryMap.length === 0) return;
             masterData.fullTerritoryMap.forEach(territory => {
                 const dominanceAvg = territory.stats ? territory.stats.dominanceAvg : 0;
-                const radius = territory.stats ? (6 + (dominanceAvg * 3)) : 2;
+                const radius = territory.stats ? (4 + (dominanceAvg * 2)) : 2;
                 const pos = dataToCanvas(territory.coordinates.x, territory.coordinates.y);
                 
-                ctx.font = '10px Arial';
+                ctx.font = "10px 'Jost', sans-serif";
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
-                
-                const textWidth = ctx.measureText(territory.emotion).width;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.fillRect(pos.x - textWidth/2 - 2, pos.y - (radius + 14), textWidth + 4, 12);
-                
-                ctx.fillStyle = '#555';
-                ctx.fillText(territory.emotion, pos.x, pos.y - (radius + 2));
+                ctx.fillStyle = territory.stats ? 'var(--text-light)' : 'var(--text-secondary)';
+                ctx.fillText(territory.emotion, pos.x, pos.y - (radius + 4));
             });
         }
 
@@ -382,106 +425,101 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // --- Correct Drawing Order ---
-
-            // 1. Draw Grid
-            ctx.strokeStyle = '#d0d0d0';
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.2)';
             ctx.lineWidth = 1;
-            ctx.setLineDash([3, 3]);
+            ctx.setLineDash([2, 4]);
             for (let radius = 20; radius <= 100; radius += 20) {
-                const minDimension = Math.min(canvas.width, canvas.height);
-                const canvasRadius = (radius / 120) * (minDimension / 2);
+                const p = dataToCanvas(radius, 0);
+                const canvasRadius = p.x - centerX;
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, canvasRadius, 0, 2 * Math.PI);
                 ctx.stroke();
             }
+            ctx.beginPath();
+            for(let i = 0; i < 8; i++) {
+                const angle = i * Math.PI / 4;
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(centerX + canvas.width * Math.cos(angle), centerY + canvas.height * Math.sin(angle));
+            }
+            ctx.stroke();
             ctx.setLineDash([]);
             
-            ctx.strokeStyle = '#666';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, centerY);
-            ctx.lineTo(canvas.width, centerY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(centerX, 0);
-            ctx.lineTo(centerX, canvas.height);
-            ctx.stroke();
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); ctx.stroke();
 
-            // 2. Draw Clipped Heatmap Layer (Fills and Borders)
             drawHeatmapLayer();
 
-            // 3. Draw Energy Orb
             if (masterData && masterData.avgEnergyUsed > 0) {
-                const maxOrbRadius = 40;
-                const orbRadius = (masterData.avgEnergyUsed / 100) * maxOrbRadius;
+                const orbRadius = (masterData.avgEnergyUsed / 100) * 40;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                ctx.shadowBlur = 15;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, orbRadius, 0, 2 * Math.PI);
-                ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(102, 126, 234, 0.5)';
                 ctx.stroke();
-                ctx.fillStyle = '#333';
-                ctx.font = 'bold 16px Arial';
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = "bold 16px 'Jost', sans-serif";
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(Math.round(masterData.avgEnergyUsed), centerX, centerY);
             }
-
-            // 4. Draw Emotion Dots
+            
             drawEmotionDots();
-
-            // 5. Draw Emotion Labels (Top Layer)
             drawEmotionLabels();
         }
 
         let messageTimer;
-        function showMessage(text, type = 'error') {
+        function showMessage(text, type = 'success') {
             const messageBox = document.getElementById('message-box');
             messageBox.textContent = text;
-            messageBox.style.backgroundColor = type === 'error' ? '#ff6b6b' : (type === 'info' ? '#6c757d' : '#4ecdc4');
+            messageBox.style.backgroundColor = type === 'success' ? '#29c7ac' : '#ff6b6b';
             messageBox.classList.add('show');
             clearTimeout(messageTimer);
-            messageTimer = setTimeout(() => {
-                messageBox.classList.remove('show');
-            }, 3000);
+            messageTimer = setTimeout(() => messageBox.classList.remove('show'), 3000);
+        }
+
+        function updateSliderFill(slider) {
+            const min = slider.min || 0;
+            const max = slider.max || 10;
+            const value = slider.value;
+            const percentage = ((value - min) / (max - min)) * 100;
+            const color = 'var(--text-secondary)'; // Use secondary color for disabled sliders
+            const trackColor = 'rgba(0, 0, 0, 0.3)';
+            slider.style.background = `linear-gradient(to right, ${color} ${percentage}%, ${trackColor} ${percentage}%)`;
         }
         
-        // NEW - Refactored function to process data from any source (file upload or URL fetch)
         function processAndDrawHeatmap(data) {
-             if (data && data.fullTerritoryMap && typeof data.avgEnergyUsed !== 'undefined') {
+            if (data && data.fullTerritoryMap && typeof data.avgEnergyUsed !== 'undefined') {
                 masterData = data;
-                rankedTerritories = masterData.fullTerritoryMap.filter(t => t.stats).sort((a, b) => a.stats.appearances - b.stats.appearances);
-
-                if (data.avgTemporalFocus) {
-                    const { past, present, future } = data.avgTemporalFocus;
-                    const pastSlider = document.getElementById('past-slider');
-                    const presentSlider = document.getElementById('present-slider');
-                    const futureSlider = document.getElementById('future-slider');
-                    const pastValueSpan = document.getElementById('past-value');
-                    const presentValueSpan = document.getElementById('present-value');
-                    const futureValueSpan = document.getElementById('future-value');
-
-                    pastSlider.value = past;
-                    pastValueSpan.textContent = past.toFixed(1);
-                    presentSlider.value = present;
-                    presentValueSpan.textContent = present.toFixed(1);
-                    futureSlider.value = future;
-                    futureValueSpan.textContent = future.toFixed(1);
-                }
-
-                if (data.weekSummary) {
-                    document.getElementById('week-summary').textContent = data.weekSummary;
-                }
+                rankedTerritories = masterData.fullTerritoryMap
+                    .filter(t => t.stats)
+                    .sort((a, b) => a.stats.appearances - b.stats.appearances);
                 
+                // Update UI with new data
+                if (data.avgTemporalFocus) {
+                    pastSlider.value = data.avgTemporalFocus.past || 0;
+                    presentSlider.value = data.avgTemporalFocus.present || 0;
+                    futureSlider.value = data.avgTemporalFocus.future || 0;
+                    pastValueSpan.textContent = pastSlider.value;
+                    presentValueSpan.textContent = presentSlider.value;
+                    futureValueSpan.textContent = futureSlider.value;
+                    [pastSlider, presentSlider, futureSlider].forEach(updateSliderFill);
+                }
+                if (data.weekSummary) {
+                    insightsText.textContent = data.weekSummary;
+                }
+
                 showMessage('Heatmap data loaded successfully!', 'success');
                 draw();
             } else {
-                showMessage('Invalid or corrupted data structure received.');
+                showMessage('Invalid or corrupted data structure received.', 'error');
             }
         }
 
-        // UPDATED - Now uses the refactored processAndDrawHeatmap function
         function handleHeatmapDataUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -489,24 +527,19 @@
             reader.onload = function(e) {
                 try {
                     const parsedData = JSON.parse(e.target.result);
-                    // n8n often wraps results in an array, so we handle that case here
                     const heatmapObject = Array.isArray(parsedData) ? parsedData[0] : parsedData;
                     processAndDrawHeatmap(heatmapObject);
-                } catch (error) {
-                    showMessage('Failed to parse JSON file.');
-                }
+                } catch (error) { showMessage('Failed to parse JSON file.', 'error'); }
             };
             reader.readAsText(file);
             event.target.value = '';
         }
 
         function downloadPalette() {
-            const dataStr = JSON.stringify(colorPalette, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
+            const blob = new Blob([JSON.stringify(colorPalette, null, 2)], {type: 'application/json'});
             const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'heatmap_palette.json');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'heatmap_palette_dark.json';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -519,59 +552,50 @@
             reader.onload = function(e) {
                 try {
                     const newPalette = JSON.parse(e.target.result);
-                    if (newPalette.zeroColor && Array.isArray(newPalette.gradient) && newPalette.gradient.every(s => typeof s.offset === 'number' && typeof s.color === 'string')) {
+                    if (newPalette.zeroColor && Array.isArray(newPalette.gradient)) {
                         colorPalette = newPalette;
-                        colorScale = d3.scaleLinear().domain(colorPalette.gradient.map(s => s.offset)).range(colorPalette.gradient.map(s => s.color));
+                        colorScale = d3.scaleLinear()
+                            .domain(colorPalette.gradient.map(s => s.offset))
+                            .range(colorPalette.gradient.map(s => s.color));
                         showMessage('Palette loaded successfully!', 'success');
                         draw();
-                    } else {
-                        showMessage('Invalid palette file structure.');
-                    }
-                } catch (error) {
-                    showMessage('Failed to parse palette file.');
-                }
+                    } else { showMessage('Invalid palette file structure.', 'error'); }
+                } catch (error) { showMessage('Failed to parse palette file.', 'error'); }
             };
             reader.readAsText(file);
             event.target.value = '';
         }
 
-        // NEW - Function to load data from URL via webhook
         async function loadDataFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            // Look for 'heatmap_id' in the URL
             const heatmapId = urlParams.get('heatmap_id');
-
             if (heatmapId) {
-                // Use 'heatmap_id' in the webhook URL
                 const webhookUrl = `https://n8n.srv968843.hstgr.cloud/webhook-test/heatmap_plus_id?heatmap_id=${heatmapId}`;
                 showMessage('Fetching heatmap data...', 'info');
-
                 try {
                     const response = await fetch(webhookUrl);
-                    if (!response.ok) {
-                        throw new Error(`Server responded with status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`Server: ${response.status}`);
                     const data = await response.json();
-                    processAndDrawHeatmap(data);
+                    const heatmapObject = Array.isArray(data) ? data[0] : data;
+                    processAndDrawHeatmap(heatmapObject);
                 } catch (error) {
-                    console.error("Error fetching heatmap data:", error);
                     showMessage(`Error: Could not fetch heatmap data. ${error.message}`, 'error');
                 }
             }
         }
 
-        // Initialize
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.fonts.ready.then(() => {
+                resizeCanvas();
+                loadDataFromUrl();
+            });
+        });
         window.addEventListener('resize', resizeCanvas);
+        const heatmapDataInput = document.getElementById('heatmapDataInput');
+        const paletteInput = document.getElementById('paletteInput');
         heatmapDataInput.addEventListener('change', handleHeatmapDataUpload, false);
         paletteInput.addEventListener('change', handlePaletteUpload, false);
-        
-        document.addEventListener('DOMContentLoaded', (event) => {
-            resizeCanvas();
-            // NEW - Call the function to check URL for data on page load
-            loadDataFromUrl();
-        });
     </script>
 </body>
 </html>
-
 
