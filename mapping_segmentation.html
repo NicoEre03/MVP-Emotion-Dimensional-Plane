@@ -4,10 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emotion Dimensional Plane - Mapping & Segmentation</title>
-    <!-- Add the D3.js library for Voronoi calculations -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* General styling for the page */
+        :root {
+            --bg-dark-start: #1a1a1a;
+            --bg-dark-end: #1a1a1a;
+            --panel-bg: #1a1a1a;
+            --accent-primary: #dad9f4;
+            --text-light: #e0e0e0;
+            --text-secondary: #a0a0b0;
+            --danger-color: #e53e3e;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -15,36 +26,44 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Jost', sans-serif;
+            font-weight: 400;
+            background: radial-gradient(circle, var(--bg-dark-end) 0%, var(--bg-dark-start) 100%);
+            color: var(--text-light);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 5px;
         }
 
         .container {
-            background: white;
+            background: var(--panel-bg);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 30px;
+            border: 1px solid var(--accent-primary);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 20px;
             max-width: 1200px;
             width: 100%;
+            backdrop-filter: blur(10px);
         }
 
         h1 {
+            font-family: 'Jost', sans-serif;
             text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            font-size: 24px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .subtitle {
             text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-size: 12px;
+            font-weight: 300;
         }
 
         .chart-container {
@@ -53,15 +72,14 @@
             max-width: 800px;
             aspect-ratio: 1 / 1;
             margin: 20px auto;
-            background: #f8f9fa;
+            background: ##1a1a1a;
             border-radius: 10px;
             overflow: hidden;
         }
 
         #chart {
-            width: calc(100% - 40px);
-            height: calc(100% - 40px);
-            margin: 20px;
+            width: 100%;
+            height: 100%;
             cursor: grab;
         }
         
@@ -71,107 +89,144 @@
 
         .axis-label {
             position: absolute;
-            font-weight: 600;
-            color: #555;
-            font-size: 14px;
-            background: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             pointer-events: none;
         }
 
         .axis-label.x-positive {
-            bottom: 15px;
-            right: 40px;
+            top: 50%;
+            right: -18px;
+            transform: translateY(-50%) rotate(-90deg);
         }
 
         .axis-label.x-negative {
-            bottom: 15px;
-            left: 40px;
+            top: 50%;
+            left: -15px;
+            transform: translateY(-50%) rotate(-90deg);
         }
 
         .axis-label.y-positive {
-            left: 5px;
-            top: 15px;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .axis-label.y-negative {
-            left: 5px;
-            bottom: 15px;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .chart-container {
+            border: 1px solid rgba(160, 160, 176, 0.3); 
         }
 
         .info-panel {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
             margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            flex-wrap: wrap;
             gap: 10px;
         }
 
-        .coordinates {
-            font-family: 'Courier New', monospace;
-            color: #333;
-            font-size: 14px;
+        .info-panel-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch; /* Make items in a row equal height */
+            width: 100%;
+            gap: 10px; /* Add gap between containers in the same row */
+        }
+
+        .info-panel-row > div { 
+            border: 1px solid var(--accent-primary); /* Apply primary border to each sub-container */
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .info-container {
+            width: 15%;
+        }
+
+        .controls-container {
+            width: 65%;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-container {
+            width: 20%;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .file-ops-container {
+             width: 100%;
+             display: flex;
+             justify-content: flex-end;
+             gap: 10px;
+        }
+        
+        .selected-emotion, .coordinates {
+             font-size: 12px;
         }
 
         .selected-emotion {
-            color: #667eea;
-            font-weight: 600;
+            color: var(--accent-primary);
+            font-weight: 700;
         }
 
         button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            background: transparent;
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            padding: 8px 15px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
+            font-family: 'Jost', sans-serif;
+            font-weight: 500;
+            font-size: 12px;
+            transition: all 0.2s ease;
         }
 
         button:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: var(--accent-primary);
+            color: #1a1a1a;
         }
         
         button.secondary {
-            background: #a0aec0;
+            color: var(--text-secondary);
+            border-color: var(--text-secondary);
         }
         button.secondary:hover {
-            background: #718096;
+            background: var(--text-secondary);
+            color: #1a1a1a;
         }
         button.danger {
-            background: #e53e3e;
-            font-size: 12px;
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+            font-size: 10px;
             padding: 4px 8px;
         }
         button.danger:hover {
-            background: #c53030;
-        }
-
-        .tooltip {
-            position: fixed;
-            background: rgba(0, 0, 0, 0.9);
+            background: var(--danger-color);
             color: white;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            pointer-events: none;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.2s;
-            transform: translate(-50%, -120%);
         }
-
-        .tooltip.visible {
-            opacity: 1;
+        
+        input[type="text"], input[type="number"] {
+            background: transparent;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-light);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: 'Jost', sans-serif;
+            font-weight: 400;
+            font-size: 12px;
         }
 
         #message-box {
@@ -179,11 +234,11 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #ff6b6b;
-            color: white;
-            padding: 12px 25px;
+            background-color: var(--panel-bg);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            padding: 10px 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             z-index: 2000;
             opacity: 0;
             transition: opacity 0.3s ease, top 0.3s ease;
@@ -201,34 +256,43 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
             z-index: 1001;
             display: none;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(5px);
         }
         #settings-panel {
-            background: white;
+            background: var(--panel-bg);
+            border: 1px solid var(--accent-primary);
             padding: 25px;
             border-radius: 15px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             max-height: 90vh;
             overflow-y: auto;
         }
         #settings-panel h2 {
+            font-family: 'Jost', sans-serif;
+            text-transform: uppercase;
             text-align: center;
             margin-bottom: 20px;
+            color: var(--text-light);
+            font-weight: 700;
         }
         .settings-section {
             margin-bottom: 20px;
         }
         .settings-section h3 {
             margin-bottom: 10px;
-            color: #4a5568;
-            border-bottom: 1px solid #e2e8f0;
+            color: var(--accent-primary);
+            border-bottom: 1px solid var(--accent-primary);
             padding-bottom: 5px;
+            font-family: 'Jost', sans-serif;
+            text-transform: uppercase;
+            font-size: 14px;
+            font-weight: 500;
         }
         .form-group {
             display: flex;
@@ -238,12 +302,7 @@
         }
         .form-group label {
             flex-basis: 120px;
-        }
-        .form-group input {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
+            font-size: 12px;
         }
         #rules-list {
             list-style: none;
@@ -256,9 +315,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px;
-            background: #f7fafc;
+            background: rgba(0,0,0,0.2);
             border-radius: 6px;
             margin-bottom: 5px;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -269,33 +329,42 @@
         
         <div class="chart-container">
             <canvas id="chart"></canvas>
-            <div class="axis-label x-positive">Pleasant</div>
-            <div class="axis-label x-negative">Unpleasant</div>
+            <div class="axis-label x-positive">Unpleasant</div>
+            <div class="axis-label x-negative">Pleasant</div>
             <div class="axis-label y-positive">Active</div>
             <div class="axis-label y-negative">Passive</div>
         </div>
         
-        <div class="tooltip" id="tooltip"></div>
         <div id="message-box"></div>
 
         <div class="info-panel">
-            <div class="selected-emotion" id="selectedInfo">No emotion selected</div>
-            <div class="coordinates" id="coordinates">X: --, Y: --</div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <button class="secondary" onclick="switchMode()">Switch to Segmentation</button>
-                <div id="mapping-controls" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="info-panel-row">
+                <div class="info-container">
+                    <div class="selected-emotion" id="selectedInfo">No emotion selected</div>
+                    <div class="coordinates" id="coordinates">X: --, Y: --</div>
+                </div>
+                <div class="controls-container" id="main-controls">
                     <button class="secondary" onclick="openSettings()">Settings</button>
-                    <input type="text" id="newEmotionInput" placeholder="Enter emotion name" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
-                    <button onclick="addNewEmotion()">Add Emotion</button>
-                    <button onclick="resetPositions()">Reset All</button>
-                    <button onclick="downloadCSV()">Download Coordinates</button>
+                    <input type="text" id="newEmotionInput" placeholder="Enter emotion name" style="flex-grow: 1;">
+                    <button onclick="addNewEmotion()">Add</button>
+                    <button onclick="resetPositions()">Reset</button>
                 </div>
-                <div id="segmentation-controls" style="display: none; gap: 10px; align-items: center; flex-wrap: wrap;">
-                     <button onclick="downloadSegmentation()">Download Segmentation</button>
-                     <button onclick="submitMapAndSegmentation()">Submit Map</button>
+                <div class="mode-container">
+                    <button class="secondary" onclick="switchMode()">Switch Mode</button>
                 </div>
-                 <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-                 <button onclick="document.getElementById('csvFileInput').click()">Upload Coordinates</button>
+            </div>
+            <div class="info-panel-row">
+                <div class="file-ops-container">
+                    <div id="mapping-file-ops">
+                        <button onclick="downloadCSV()">Download Coords</button>
+                        <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                        <button onclick="document.getElementById('csvFileInput').click()">Upload Coords</button>
+                    </div>
+                    <div id="segmentation-file-ops" style="display: none;">
+                         <button onclick="downloadSegmentation()">Download Seg</button>
+                         <button onclick="submitMapAndSegmentation()">Submit Map</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -358,26 +427,15 @@
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                 <button class="secondary" onclick="closeSettings()">Cancel</button>
                 <button onclick="saveSettings()">Save & Close</button>
+                <button onclick="submitSettings()">Submit Settings</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Global state variables ---
-        let currentMode = 'mapping'; // 'mapping' or 'segmentation'
-
-        let recordingSettings = {
-            totalEnergy: 100,
-            activationCost: 10,
-            resizeCost: 15,
-            ringMultipliers: [1, 1.2, 1.5, 2],
-            rules: [
-                { trigger: 6, constraints: [1, 2, 3, 8] },
-                { trigger: 1, constraints: [4, 5, 6, 7] }
-            ]
-        };
-
-        // Emotion data with coordinates
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d');
+        let currentMode = 'mapping';
         let emotionsData = [
             {emotion: "acceptance", x: -13, y: -48}, {emotion: "admiration", x: -48, y: -51},
             {emotion: "adventurous", x: -48, y: 75}, {emotion: "alarmed", x: 25, y: 66},
@@ -428,83 +486,76 @@
         ].map(e => ({ ...e, isBold: false, originalEmotion: e.emotion, isSelected: false, dominanceLevel: 0 }));
 
         let originalPositions = JSON.parse(JSON.stringify(emotionsData));
-
-        const canvas = document.getElementById('chart');
-        const ctx = canvas.getContext('2d');
-        const tooltip = document.getElementById('tooltip');
         
         let selectedEmotion = null;
         let isDragging = false;
         let draggedEmotion = null;
+        
+        let recordingSettings = {
+            totalEnergy: 100,
+            activationCost: 10,
+            resizeCost: 15,
+            ringMultipliers: [1, 1.2, 1.5, 2],
+            rules: [
+                { trigger: 6, constraints: [1, 2, 3, 8] },
+                { trigger: 1, constraints: [4, 5, 6, 7] }
+            ]
+        };
+
+        const range = 110;
 
         function resizeCanvas() {
             const container = canvas.parentElement;
-            canvas.width = container.clientWidth - 40;
-            canvas.height = container.clientHeight - 40;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
             draw();
         }
 
         function dataToCanvas(x, y) {
-            const canvasX = (x + 120) * canvas.width / 240;
-            const canvasY = (120 - y) * canvas.height / 240;
+            const canvasX = (x + range) * canvas.width / (2 * range);
+            const canvasY = (range - y) * canvas.height / (2 * range);
             return {x: canvasX, y: canvasY};
         }
         
         function canvasToData(canvasX, canvasY) {
-            const x = Math.round((canvasX * 240 / canvas.width) - 120);
-            const y = Math.round(120 - (canvasY * 240 / canvas.height));
+            const x = Math.round((canvasX * (2 * range) / canvas.width) - range);
+            const y = Math.round(range - (canvasY * (2 * range) / canvas.height));
             return {x: Math.max(-100, Math.min(100, x)), y: Math.max(-100, Math.min(100, y))};
         }
         
-        function dataToCanvasSegmentation(x, y) {
-            const canvasX = (x + 120) * canvas.width / 240;
-            const canvasY = (120 - y) * canvas.height / 240;
-            return {x: canvasX, y: canvasY};
-        }
-
         function canvasToDataSegmentation(canvasX, canvasY) {
-            const x = Math.round(((canvasX * 240 / canvas.width) - 120) * 100) / 100;
-            const y = Math.round((120 - (canvasY * 240 / canvas.height)) * 100) / 100;
+            const x = ((canvasX * (2 * range) / canvas.width) - range);
+            const y = (range - (canvasY * (2 * range) / canvas.height));
             return {x: x, y: y};
         }
 
 
         function getEmotionColor(x, y, isUserAdded) {
-            if (isUserAdded) return '#0066cc';
+            if (isUserAdded) return '#00bfff';
 
             const radius = Math.sqrt(x * x + y * y);
-
-            if (radius <= 20) {
-                return 'hsl(50, 80%, 60%)';
-            }
+            if (radius <= 20) return 'hsl(50, 80%, 60%)';
 
             let angle = Math.atan2(y, x) * (180 / Math.PI);
-            if (angle < 0) {
-                angle += 360;
-            }
-            
+            if (angle < 0) angle += 360;
             const hue = Math.round((angle - 45 + 360) % 360);
 
-            let saturation;
+            let saturation = 100;
             if (radius <= 40) saturation = 50;
             else if (radius <= 60) saturation = 65;
             else if (radius <= 80) saturation = 80;
-            else saturation = 100;
 
-            const lightness = 55;
-
-            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            return `hsl(${hue}, ${saturation}%, 55%)`;
         }
         
         function drawVoronoiSegmentation() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const minDimension = Math.min(canvas.width, canvas.height);
-            const outerRadius = (100 / 120) * (minDimension / 2);
-            const innerRadius = (20 / 120) * (minDimension / 2);
+            const outerRadius = dataToCanvas(100,0).x - centerX;
+            const innerRadius = dataToCanvas(20,0).x - centerX;
 
             const points = emotionsData.map(e => {
-                const pos = dataToCanvasSegmentation(e.x, e.y);
+                const pos = dataToCanvas(e.x, e.y);
                 return [pos.x, pos.y];
             });
 
@@ -514,111 +565,87 @@
             const voronoi = delaunay.voronoi([0, 0, canvas.width, canvas.height]);
 
             ctx.save();
-            // Create the donut-shaped clipping mask
             ctx.beginPath();
-            ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI, false); // Outer circle
-            ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI, true); // Inner circle (hole)
+            ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI, false);
+            ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI, true);
             ctx.clip();
 
-            // Draw the Voronoi cells (they will be clipped by the mask)
             ctx.beginPath();
             for (let i = 0; i < points.length; i++) {
                 const cell = voronoi.cellPolygon(i);
                 if (cell) {
                     ctx.moveTo(cell[0][0], cell[0][1]);
-                    for (let j = 1; j < cell.length; j++) {
-                        ctx.lineTo(cell[j][0], cell[j][1]);
-                    }
+                    for (let j = 1; j < cell.length; j++) ctx.lineTo(cell[j][0], cell[j][1]);
                     ctx.closePath();
                 }
             }
-            
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.strokeStyle = 'var(--accent-primary)';
             ctx.lineWidth = 1;
             ctx.stroke();
-
-            ctx.restore(); // Remove the clipping mask
+            ctx.restore();
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (currentMode === 'mapping') {
-                drawMappingMode();
-            } else {
-                drawSegmentationMode();
-            }
+            if (currentMode === 'mapping') drawMappingMode();
+            else drawSegmentationMode();
         }
         
         function drawMappingMode(){
-             const centerX = canvas.width / 2;
+            const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             
-            ctx.strokeStyle = '#d0d0d0';
+            // Radial and Diagonal Grid
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.2)';
             ctx.lineWidth = 1;
-            ctx.setLineDash([3, 3]);
+            ctx.setLineDash([2, 4]);
             for (let radius = 20; radius <= 100; radius += 20) {
                 ctx.beginPath();
-                const minDimension = Math.min(canvas.width, canvas.height);
-                const canvasRadius = (radius / 120) * (minDimension / 2);
+                const canvasRadius = dataToCanvas(radius, 0).x - centerX;
                 ctx.arc(centerX, centerY, canvasRadius, 0, 2 * Math.PI);
                 ctx.stroke();
             }
             
             ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.moveTo(canvas.width, 0);
-            ctx.lineTo(0, canvas.height);
+            for(let i = 0; i < 8; i++) {
+                const angle = i * Math.PI / 4;
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(centerX + canvas.width * Math.cos(angle), centerY + canvas.height * Math.sin(angle));
+            }
             ctx.stroke();
-
             ctx.setLineDash([]);
             
-            ctx.strokeStyle = '#e0e0e0';
+            // Orthogonal Grid
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.1)';
+            for (let i = -100; i <= 100; i += 25) {
+                if (i === 0) continue;
+                let pos = dataToCanvas(i, 0);
+                ctx.beginPath(); ctx.moveTo(pos.x, 0); ctx.lineTo(pos.x, canvas.height); ctx.stroke();
+                pos = dataToCanvas(0, i);
+                ctx.beginPath(); ctx.moveTo(0, pos.y); ctx.lineTo(canvas.width, pos.y); ctx.stroke();
+            }
+
+            // Main Axes
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.4)';
             ctx.lineWidth = 1;
-            for (let i = 0; i <= 12; i++) {
-                const x = (canvas.width / 12) * i;
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
-            }
-            for (let i = 0; i <= 12; i++) {
-                const y = (canvas.height / 12) * i;
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-            
-            ctx.strokeStyle = '#666';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
-            ctx.lineTo(canvas.width, canvas.height / 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, 0);
-            ctx.lineTo(canvas.width / 2, canvas.height);
-            ctx.stroke();
-            
-            ctx.fillStyle = '#888';
-            ctx.font = '11px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            const xValues = [-120, -100, -75, -50, -25, 0, 25, 50, 75, 100, 120];
-            xValues.forEach(val => {
+            ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); ctx.stroke();
+
+            // Axis Number Labels
+            ctx.fillStyle = '#a0a0b0';
+            ctx.font = "10px 'Jost', sans-serif";
+            ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+            [-100, -50, 50, 100].forEach(val => {
                 const x = dataToCanvas(val, 0).x;
-                ctx.fillText(val.toString(), x, canvas.height / 2 + 5);
+                ctx.fillText(val.toString(), x, centerY + 5);
             });
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            const yValues = [-120, -100, -75, -50, -25, 25, 50, 75, 100, 120];
-            yValues.forEach(val => {
+            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            [-100, -50, 50, 100].forEach(val => {
                 const y = dataToCanvas(0, val).y;
-                ctx.fillText(val.toString(), canvas.width / 2 + 5, y);
+                ctx.fillText(val.toString(), centerX + 5, y);
             });
             
+            // Emotion dots and labels
             emotionsData.forEach(emotion => {
                 const pos = dataToCanvas(emotion.x, emotion.y);
                 const color = getEmotionColor(emotion.x, emotion.y, emotion.userAdded);
@@ -630,38 +657,17 @@
                 ctx.fill();
                 
                 if (selectedEmotion === emotion) {
-                    ctx.strokeStyle = '#333';
+                    ctx.strokeStyle = 'var(--accent-primary)';
                     ctx.lineWidth = 2;
                     ctx.stroke();
                 }
                 
-                const primaryEmotions = ['Happy', 'Sad', 'Angry', 'Fear', 'Surprise', 'Neutral'];
-                let fontDeclaration = '';
-                if (emotion.isBold) fontDeclaration += 'bold ';
-
-                if (primaryEmotions.includes(emotion.originalEmotion)) {
-                    ctx.fillStyle = '#333';
-                    fontDeclaration += '11px Arial';
-                } else if (emotion.userAdded) {
-                    ctx.fillStyle = '#0066cc';
-                    fontDeclaration += 'italic 10px Arial';
-                } else {
-                    ctx.fillStyle = '#555';
-                    fontDeclaration += '10px Arial';
-                }
+                let fontDeclaration = "10px 'Jost', sans-serif";
+                if (emotion.isBold) fontDeclaration = 'bold ' + fontDeclaration;
                 ctx.font = fontDeclaration;
-                
+                ctx.fillStyle = '#e0e0e0';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
-                
-                const textWidth = ctx.measureText(emotion.emotion).width;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.fillRect(pos.x - textWidth/2 - 2, pos.y - (radius + 14), textWidth + 4, 12);
-                
-                if (primaryEmotions.includes(emotion.originalEmotion)) ctx.fillStyle = '#333';
-                else if (emotion.userAdded) ctx.fillStyle = '#0066cc';
-                else ctx.fillStyle = '#555';
-                
                 ctx.fillText(emotion.emotion, pos.x, pos.y - (radius + 2));
             });
         }
@@ -672,31 +678,24 @@
 
             drawVoronoiSegmentation();
             
-            ctx.strokeStyle = '#d0d0d0';
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.2)';
             ctx.lineWidth = 1;
-            ctx.setLineDash([3, 3]);
+            ctx.setLineDash([2, 4]);
             for (let radius = 20; radius <= 100; radius += 20) {
-                const minDimension = Math.min(canvas.width, canvas.height);
-                const canvasRadius = (radius / 120) * (minDimension / 2);
+                const canvasRadius = dataToCanvas(radius, 0).x - centerX;
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, canvasRadius, 0, 2 * Math.PI);
                 ctx.stroke();
             }
             ctx.setLineDash([]);
             
-            ctx.strokeStyle = '#666';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, centerY);
-            ctx.lineTo(canvas.width, centerY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(centerX, 0);
-            ctx.lineTo(centerX, canvas.height);
-            ctx.stroke();
+            ctx.strokeStyle = 'rgba(218, 217, 244, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); ctx.stroke();
 
             emotionsData.forEach(emotion => {
-                const pos = dataToCanvasSegmentation(emotion.x, emotion.y);
+                const pos = dataToCanvas(emotion.x, emotion.y);
                 const radius = 6;
                 
                 ctx.beginPath();
@@ -704,21 +703,14 @@
                 ctx.fillStyle = '#cccccc';
                 ctx.fill();
                 
-                let fontDeclaration = '10px Arial';
-                ctx.font = fontDeclaration;
+                ctx.font = "10px 'Jost', sans-serif";
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
-                
-                const textWidth = ctx.measureText(emotion.emotion).width;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.fillRect(pos.x - textWidth/2 - 2, pos.y - (radius + 14), textWidth + 4, 12);
-                
-                ctx.fillStyle = '#555';
+                ctx.fillStyle = '#e0e0e0';
                 ctx.fillText(emotion.emotion, pos.x, pos.y - (radius + 2));
             });
         }
-
-
+        
         function getEmotionAt(canvasX, canvasY) {
             if (currentMode !== 'mapping') return null;
             for (let i = emotionsData.length - 1; i >= 0; i--) {
@@ -726,9 +718,7 @@
                 const pos = dataToCanvas(emotion.x, emotion.y);
                 const radius = 6;
                 const dist = Math.sqrt(Math.pow(pos.x - canvasX, 2) + Math.pow(pos.y - canvasY, 2));
-                if (dist <= radius + 2) {
-                    return emotion;
-                }
+                if (dist <= radius + 2) return emotion;
             }
             return null;
         }
@@ -764,13 +754,8 @@
             } else {
                 const emotion = getEmotionAt(x, y);
                 if (emotion) {
-                    tooltip.textContent = `${emotion.emotion} (X: ${emotion.x}, Y: ${emotion.y})`;
-                    tooltip.style.left = e.clientX + 'px';
-                    tooltip.style.top = e.clientY + 'px';
-                    tooltip.classList.add('visible');
                     canvas.style.cursor = 'grab';
                 } else {
-                    tooltip.classList.remove('visible');
                     canvas.style.cursor = 'default';
                 }
             }
@@ -782,28 +767,26 @@
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-
                 if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
-                    const emotionNameToDelete = draggedEmotion.originalEmotion;
-                    const dataIndex = emotionsData.findIndex(em => em.originalEmotion === emotionNameToDelete);
-                    if (dataIndex > -1) emotionsData.splice(dataIndex, 1);
-                    const originalIndex = originalPositions.findIndex(em => em.originalEmotion === emotionNameToDelete);
-                    if (originalIndex > -1) originalPositions.splice(originalIndex, 1);
-                    showMessage(`'${emotionNameToDelete}' deleted.`, 'success');
+                    const nameToDelete = draggedEmotion.originalEmotion;
+                    emotionsData = emotionsData.filter(em => em.originalEmotion !== nameToDelete);
+                    originalPositions = originalPositions.filter(em => em.originalEmotion !== nameToDelete);
+                    showMessage(`'${nameToDelete}' deleted.`, 'success');
                     selectedEmotion = null;
                     document.getElementById('selectedInfo').textContent = 'No emotion selected';
                     document.getElementById('coordinates').textContent = 'X: --, Y: --';
-                    draw();
                 }
+                draw();
             }
             isDragging = false;
             draggedEmotion = null;
             canvas.style.cursor = 'grab';
         });
 
-        canvas.addEventListener('mouseleave', () => {
-             if (currentMode !== 'mapping') return;
-            tooltip.classList.remove('visible');
+        canvas.addEventListener('mouseleave', (e) => {
+            if (isDragging) {
+                 canvas.dispatchEvent(new MouseEvent('mouseup', e));
+            }
         });
 
         canvas.addEventListener('dblclick', (e) => {
@@ -832,9 +815,9 @@
         }
         
         function updateUIVisibility() {
-            const mappingControls = document.getElementById('mapping-controls');
-            const segmentationControls = document.getElementById('segmentation-controls');
-            const switchBtn = document.querySelector('.info-panel button.secondary');
+            const mainControls = document.getElementById('main-controls');
+            const mappingFileOps = document.getElementById('mapping-file-ops');
+            const segmentationFileOps = document.getElementById('segmentation-file-ops');
             const subtitle = document.getElementById('subtitle-text');
             const mainTitle = document.getElementById('main-title');
             const chart = document.getElementById('chart');
@@ -842,16 +825,16 @@
             if (currentMode === 'mapping') {
                 mainTitle.textContent = 'Emotion Dimensional Plane';
                 subtitle.textContent = 'Drag to reposition • Drag out of frame to delete • Click to select • Double-click to bold/capitalize';
-                mappingControls.style.display = 'flex';
-                segmentationControls.style.display = 'none';
-                switchBtn.textContent = 'Switch to Segmentation';
+                mainControls.style.display = 'flex';
+                mappingFileOps.style.display = 'block';
+                segmentationFileOps.style.display = 'none';
                 chart.style.cursor = 'grab';
             } else {
                 mainTitle.textContent = 'Segmentation Tool';
                 subtitle.textContent = 'Generate and download Voronoi segmentations from emotion coordinates.';
-                mappingControls.style.display = 'none';
-                segmentationControls.style.display = 'flex';
-                switchBtn.textContent = 'Switch to Mapping';
+                mainControls.style.display = 'none';
+                mappingFileOps.style.display = 'none';
+                segmentationFileOps.style.display = 'block';
                 chart.style.cursor = 'default';
             }
         }
@@ -865,43 +848,27 @@
         }
         
         let messageTimer;
-        function showMessage(text, type = 'error') {
+        function showMessage(text, type = 'success') {
             const messageBox = document.getElementById('message-box');
             messageBox.textContent = text;
-            let bgColor = '#ff6b6b'; // default error red
-            if (type === 'success') {
-                bgColor = '#4ecdc4';
-            } else if (type === 'info') {
-                bgColor = '#6c757d';
-            }
-            messageBox.style.backgroundColor = bgColor;
+            messageBox.style.borderColor = type === 'success' ? 'var(--accent-primary)' : 'var(--danger-color)';
+            messageBox.style.color = type === 'success' ? 'var(--accent-primary)' : 'var(--danger-color)';
             messageBox.classList.add('show');
             clearTimeout(messageTimer);
-            messageTimer = setTimeout(() => {
-                messageBox.classList.remove('show');
-            }, 3000);
+            messageTimer = setTimeout(() => messageBox.classList.remove('show'), 3000);
         }
 
         function addNewEmotion() {
             const input = document.getElementById('newEmotionInput');
             const emotionName = input.value.trim();
-            if (emotionName === '') {
-                showMessage('Please enter an emotion name.');
-                return;
-            }
+            if (emotionName === '') return showMessage('Please enter an emotion name.', 'error');
             if (emotionsData.some(e => e.originalEmotion.toLowerCase() === emotionName.toLowerCase())) {
-                showMessage('This emotion already exists.');
-                return;
+                return showMessage('This emotion already exists.', 'error');
             }
             const newEmotion = { 
-                emotion: emotionName, 
-                originalEmotion: emotionName,
-                x: 0, 
-                y: 0, 
-                userAdded: true, 
-                isBold: false,
-                isSelected: false,
-                dominanceLevel: 0
+                emotion: emotionName, originalEmotion: emotionName,
+                x: 0, y: 0, userAdded: true, isBold: false,
+                isSelected: false, dominanceLevel: 0
             };
             emotionsData.push(newEmotion);
             originalPositions.push(JSON.parse(JSON.stringify(newEmotion)));
@@ -912,112 +879,101 @@
         }
         
         document.getElementById('newEmotionInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                addNewEmotion();
-            }
+            if (e.key === 'Enter') addNewEmotion();
         });
         
         function downloadCSV() {
             let csvContent = "emotion,X,Y\n";
-            const sortedEmotions = [...emotionsData].sort((a, b) => 
-                a.originalEmotion.toLowerCase().localeCompare(b.originalEmotion.toLowerCase())
-            );
-            sortedEmotions.forEach(e => {
-                csvContent += `"${e.originalEmotion.replace(/"/g, '""')}",${e.x},${e.y}\n`;
-            });
+            [...emotionsData].sort((a, b) => a.originalEmotion.toLowerCase().localeCompare(b.originalEmotion.toLowerCase()))
+                .forEach(e => csvContent += `"${e.originalEmotion.replace(/"/g, '""')}",${e.x},${e.y}\n`);
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `emotions_coordinates_${timestamp}.csv`);
-            link.style.visibility = 'hidden';
+            link.href = URL.createObjectURL(blob);
+            link.download = `emotions_coordinates_${new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '')}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
         
         function getSegmentationData() {
-            const emotionsInsideRing = emotionsData.filter(e => Math.sqrt(e.x * e.x + e.y * e.y) <= 100);
-            const points = emotionsInsideRing.map(e => {
-                const pos = dataToCanvasSegmentation(e.x, e.y);
+            const points = emotionsData.map(e => {
+                const pos = dataToCanvas(e.x, e.y);
                 return [pos.x, pos.y];
             });
 
             if (points.length === 0) {
-                showMessage("No emotions within the chart to create a segmentation.");
+                showMessage("No emotions to create a segmentation.", "error");
                 return null;
             }
 
             const delaunay = d3.Delaunay.from(points);
             const voronoi = delaunay.voronoi([0, 0, canvas.width, canvas.height]);
-
-            const segmentationData = [];
-            for (let i = 0; i < points.length; i++) {
+            return emotionsData.map((emotion, i) => {
                 const cell = voronoi.cellPolygon(i);
-                if (cell) {
-                    const polygonData = cell.map(p => {
-                        const dataPoint = canvasToDataSegmentation(p[0], p[1]);
-                        return { x: dataPoint.x, y: dataPoint.y };
-                    });
-                    segmentationData.push({
-                        emotion: emotionsInsideRing[i].emotion,
-                        polygon: polygonData
-                    });
-                }
-            }
-            return segmentationData;
+                const polygon = cell ? cell.map(p => canvasToDataSegmentation(p[0], p[1])) : [];
+                return { emotion: emotion.emotion, polygon };
+            });
         }
 
         async function submitMapAndSegmentation() {
             const segmentationData = getSegmentationData();
-            if (!segmentationData) return; 
-
+            if (!segmentationData) return;
             const payload = {
-                coordinates: emotionsData.map(({ emotion, originalEmotion, x, y, userAdded, isBold }) => ({ emotion, originalEmotion, x, y, userAdded, isBold })),
-                segmentation: segmentationData
+                user_identifier: 'nico',
+                map_data: {
+                    coordinates: emotionsData.map(({ emotion, x, y, isBold }) => ({ emotion, x, y, isBold })),
+                    segmentation: segmentationData
+                }
             };
-
             const webhookUrl = 'https://n8n.srv968843.hstgr.cloud/webhook-test/map-seg';
-
-            showMessage("Submitting map and segmentation...", "info");
-
+            showMessage("Submitting map...", "info");
             try {
                 const response = await fetch(webhookUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
-                if (response.ok) {
-                    showMessage("Submission successful!", "success");
-                } else {
-                    const errorText = await response.text();
-                    showMessage(`Submission failed: ${response.status} ${response.statusText}. ${errorText}`, "error");
-                }
+                if (response.ok) showMessage("Submission successful!");
+                else showMessage(`Submission failed: ${response.statusText}`, "error");
             } catch (error) {
-                showMessage(`Submission failed: Network error. ${error.message}`, "error");
+                showMessage(`Submission failed: Network error.`, "error");
+            }
+        }
+
+        async function submitSettings() {
+            const payload = {
+                user_identifier: 'nico',
+                settings_data: recordingSettings
+            };
+            const webhookUrl = 'https://n8n.srv968843.hstgr.cloud/webhook-test/settings_id';
+            showMessage("Submitting settings...", "info");
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) showMessage("Settings submitted successfully!");
+                else showMessage(`Submission failed: ${response.statusText}`, "error");
+            } catch (error) {
+                showMessage(`Submission failed: Network error.`, "error");
             }
         }
 
         function downloadSegmentation() {
             const segmentationData = getSegmentationData();
             if(!segmentationData) return;
-
             let csvContent = "emotion,polygon_data\n";
             segmentationData.forEach(item => {
                  const emotionName = `"${item.emotion.replace(/"/g, '""')}"`;
                  const polygonString = `"${JSON.stringify(item.polygon).replace(/"/g, '""')}"`;
                  csvContent += `${emotionName},${polygonString}\n`;
             });
-
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'voronoi_segmentation.csv');
+            link.href = url;
+            link.download = 'voronoi_segmentation.csv';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1027,9 +983,7 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                parseCSV(e.target.result);
-            };
+            reader.onload = e => parseCSV(e.target.result);
             reader.readAsText(file);
             event.target.value = '';
         }
@@ -1039,52 +993,27 @@
 
         function parseCSV(text) {
             const newEmotions = [];
-            const lines = text.split(/\r\n|\n/);
-            const header = lines[0].split(',').map(h => h.trim().toLowerCase());
-            const emotionIndex = header.indexOf('emotion');
-            const xIndex = header.indexOf('x');
-            const yIndex = header.indexOf('y');
-
-            if (emotionIndex === -1 || xIndex === -1 || yIndex === -1) {
-                showMessage('Invalid CSV. Header must contain "emotion", "X", and "Y".');
-                return;
-            }
-
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim() === '') continue;
-                const data = lines[i].split(',');
-                const emotionName = data[emotionIndex]?.trim().replace(/"/g, '');
-                const x = parseInt(data[xIndex], 10);
-                const y = parseInt(data[yIndex], 10);
-
-                if (!emotionName || isNaN(x) || isNaN(y)) {
-                    showMessage(`Skipping invalid row ${i + 1}: ${lines[i]}`);
-                    continue;
-                }
-
+            const lines = text.split(/\r\n|\n/).slice(1);
+            for (const line of lines) {
+                if (line.trim() === '') continue;
+                const [emotion, x, y] = line.split(',');
+                if (!emotion || isNaN(parseInt(x)) || isNaN(parseInt(y))) continue;
                 newEmotions.push({
-                    emotion: emotionName,
-                    originalEmotion: emotionName,
-                    x: Math.max(-100, Math.min(100, x)),
-                    y: Math.max(-100, Math.min(100, y)),
-                    isBold: false,
-                    isSelected: false,
-                    dominanceLevel: 0
+                    emotion: emotion.trim().replace(/"/g, ''),
+                    originalEmotion: emotion.trim().replace(/"/g, ''),
+                    x: Math.max(-100, Math.min(100, parseInt(x))),
+                    y: Math.max(-100, Math.min(100, parseInt(y))),
+                    isBold: false, isSelected: false, dominanceLevel: 0
                 });
             }
-            
-            if (newEmotions.length === 0) {
-                showMessage('No valid emotion data found in the uploaded file.');
-                return;
-            }
-
+            if (newEmotions.length === 0) return showMessage('No valid data found.', "error");
             emotionsData = newEmotions;
             originalPositions = JSON.parse(JSON.stringify(newEmotions));
             selectedEmotion = null;
             document.getElementById('selectedInfo').textContent = 'No emotion selected';
             document.getElementById('coordinates').textContent = 'X: --, Y: --';
             draw();
-            showMessage('Successfully loaded new emotion data!', 'success');
+            showMessage('Successfully loaded new emotion data!');
         }
 
         function openSettings() {
@@ -1104,13 +1033,15 @@
         }
 
         function saveSettings() {
-            recordingSettings.totalEnergy = parseInt(document.getElementById('total-energy').value) || 100;
-            recordingSettings.activationCost = parseInt(document.getElementById('activation-cost').value) || 10;
-            recordingSettings.resizeCost = parseInt(document.getElementById('resize-cost').value) || 15;
-            recordingSettings.ringMultipliers[0] = parseFloat(document.getElementById('ring1-multiplier').value) || 1;
-            recordingSettings.ringMultipliers[1] = parseFloat(document.getElementById('ring2-multiplier').value) || 1;
-            recordingSettings.ringMultipliers[2] = parseFloat(document.getElementById('ring3-multiplier').value) || 1;
-            recordingSettings.ringMultipliers[3] = parseFloat(document.getElementById('ring4-multiplier').value) || 1;
+            recordingSettings.totalEnergy = parseInt(document.getElementById('total-energy').value, 10) || 100;
+            recordingSettings.activationCost = parseInt(document.getElementById('activation-cost').value, 10) || 10;
+            recordingSettings.resizeCost = parseInt(document.getElementById('resize-cost').value, 10) || 15;
+            recordingSettings.ringMultipliers = [
+                parseFloat(document.getElementById('ring1-multiplier').value) || 1,
+                parseFloat(document.getElementById('ring2-multiplier').value) || 1,
+                parseFloat(document.getElementById('ring3-multiplier').value) || 1,
+                parseFloat(document.getElementById('ring4-multiplier').value) || 1
+            ];
             closeSettings();
         }
 
@@ -1119,28 +1050,20 @@
             list.innerHTML = '';
             recordingSettings.rules.forEach((rule, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>If sector <b>${rule.trigger}</b> is selected, constrain <b>${rule.constraints.join(', ')}</b></span>
-                    <button class="danger" onclick="removeRule(${index})">Delete</button>
-                `;
+                li.innerHTML = `<span>If <b>${rule.trigger}</b>, constrain <b>${rule.constraints.join(', ')}</b></span><button class="danger" onclick="removeRule(${index})">X</button>`;
                 list.appendChild(li);
             });
         }
 
         function addRule() {
-            const triggerInput = document.getElementById('trigger-sector');
-            const constraintsInput = document.getElementById('constrained-sectors');
-            const trigger = parseInt(triggerInput.value);
-            const constraints = constraintsInput.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 8);
-
+            const trigger = parseInt(document.getElementById('trigger-sector').value);
+            const constraints = document.getElementById('constrained-sectors').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 8);
             if (!trigger || constraints.length === 0 || trigger < 1 || trigger > 8) {
-                showMessage("Invalid rule. Please check your inputs.");
-                return;
+                return showMessage("Invalid rule.", "error");
             }
-
             recordingSettings.rules.push({ trigger, constraints });
-            triggerInput.value = '';
-            constraintsInput.value = '';
+            document.getElementById('trigger-sector').value = '';
+            document.getElementById('constrained-sectors').value = '';
             renderRulesList();
         }
 
@@ -1150,8 +1073,7 @@
         }
 
         function downloadSettings() {
-            const settingsString = JSON.stringify(recordingSettings, null, 2);
-            const blob = new Blob([settingsString], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(recordingSettings, null, 2)], { type: 'application/json' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'emotion_chart_settings.json';
@@ -1160,39 +1082,81 @@
             document.body.removeChild(link);
         }
 
+        async function loadConfigFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userMapId = urlParams.get('user_map_id');
+            const settingsId = urlParams.get('settings_id');
+
+            if (userMapId && settingsId) {
+                const webhookUrl = `https://n8n.srv968843.hstgr.cloud/webhook-test/map-settings_id?user_map_id=${userMapId}&settings_id=${settingsId}`;
+                showMessage('Loading custom configuration...', 'info');
+
+                try {
+                    const response = await fetch(webhookUrl);
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                    const data = await response.json();
+
+                    if (data.map_data && data.settings_data) {
+                        // Load coordinates, ignoring segmentation data as planned
+                        if (Array.isArray(data.map_data.coordinates)) {
+                            emotionsData = data.map_data.coordinates.map(e => ({
+                                ...e,
+                                originalEmotion: e.emotion,
+                                userAdded: e.userAdded || false,
+                                isSelected: false,
+                                dominanceLevel: 0
+                            }));
+                            // Update the reset state to match the loaded data
+                            originalPositions = JSON.parse(JSON.stringify(emotionsData));
+                        }
+                        
+                        // Load settings
+                        recordingSettings = data.settings_data;
+                        showMessage('Custom configuration loaded successfully!', 'success');
+                    } else {
+                        throw new Error("Invalid data structure received from server.");
+                    }
+
+                } catch (error) {
+                    console.error("Error fetching configuration:", error);
+                    showMessage(`Error: Could not load configuration. ${error.message}`, 'error');
+                }
+            }
+        }
+
         const settingsFileInput = document.getElementById('settingsFileInput');
         settingsFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = e => {
                 try {
                     const newSettings = JSON.parse(e.target.result);
                     if (newSettings.totalEnergy && newSettings.rules && newSettings.ringMultipliers) {
                         recordingSettings = newSettings;
                         openSettings();
-                        showMessage("Settings loaded successfully!", "success");
-                    } else {
-                        showMessage("Invalid or corrupted settings file.");
-                    }
-                } catch (error) {
-                    showMessage("Could not parse the settings file.");
-                }
+                        showMessage("Settings loaded successfully!");
+                    } else showMessage("Invalid settings file.", "error");
+                } catch (error) { showMessage("Could not parse settings file.", "error"); }
             };
             reader.readAsText(file);
             event.target.value = '';
         }, false);
 
-        // Initialize
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.fonts.ready.then(async () => {
+                await loadConfigFromUrl(); // Load data from URL first
+                resizeCanvas(); // Then perform initial resize and draw
+            });
+        });
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('mouseup', (e) => {
-            if (isDragging) {
-                canvas.dispatchEvent(new MouseEvent('mouseup', e));
-            }
+            if (isDragging) canvas.dispatchEvent(new MouseEvent('mouseup', e));
         });
-        resizeCanvas();
     </script>
 </body>
 </html>
+
 
