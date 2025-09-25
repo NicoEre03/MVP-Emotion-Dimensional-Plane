@@ -829,7 +829,11 @@
                     if (data.map_data && data.settings_data) {
                         if (Array.isArray(data.map_data.coordinates)) {
                             emotionsData = data.map_data.coordinates.map(e => ({ 
-                                ...e, isBold: false, isSelected: false, dominanceLevel: 0 
+                                ...e,
+                                originalEmotion: e.emotion,
+                                isBold: false, 
+                                isSelected: false, 
+                                dominanceLevel: 0 
                             }));
                         }
                         recordingSettings = data.settings_data;
