@@ -573,7 +573,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const heatmapId = urlParams.get('heatmap_id');
             if (heatmapId) {
-                const webhookUrl = `https://n8n.srv968843.hstgr.cloud/webhook-test/heatmap_plus_id?heatmap_id=${heatmapId}`;
+                const webhookUrl = `https://n8n.srv968843.hstgr.cloud/webhook/heatmap_plus_id?heatmap_id=${heatmapId}`;
                 showMessage('Fetching heatmap data...', 'info');
                 try {
                     const response = await fetch(webhookUrl);
