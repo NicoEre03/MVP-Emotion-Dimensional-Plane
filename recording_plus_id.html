@@ -794,7 +794,7 @@
 
         async function submitState() {
             const stateObject = createStateObject();
-            const webhookUrl = 'https://n8n.srv968843.hstgr.cloud/webhook-test/journal-entry';
+            const webhookUrl = 'https://n8n.srv968843.hstgr.cloud/webhook/journal-entry';
             showMessage("Submitting state...", "info");
             try {
                 const response = await fetch(webhookUrl, {
