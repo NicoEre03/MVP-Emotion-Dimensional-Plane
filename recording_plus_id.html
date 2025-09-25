@@ -511,6 +511,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
+            const dynamicFontSize = Math.max(6, canvas.width / 60);
 
             ctx.strokeStyle = 'rgba(218, 217, 244, 0.1)';
             ctx.lineWidth = 1;
@@ -572,7 +573,7 @@
             ctx.beginPath(); ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height); ctx.stroke();
             
             ctx.fillStyle = '#a0a0b0';
-            ctx.font = "10px 'Jost', sans-serif";
+            ctx.font = `${dynamicFontSize / 1.2}px 'Jost', sans-serif`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'top';
             [-100, -50, 50, 100].forEach(val => {
                 const x = dataToCanvas(val, 0).x;
@@ -584,7 +585,7 @@
                 ctx.fillText(val.toString(), canvas.width / 2 + 5, y);
             });
             
-            const maxOrbRadius = 40;
+            const maxOrbRadius = canvas.width / 20;
             const orbRadius = maxOrbRadius * (energy / recordingSettings.totalEnergy);
 
             // Draw the gradient fill
@@ -607,14 +608,14 @@
             ctx.shadowBlur = 0;
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = "bold 16px 'Jost', sans-serif";
+            ctx.font = `bold ${dynamicFontSize * 1.4}px 'Jost', sans-serif`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(energy, centerX, centerY);
 
             emotionsData.forEach(emotion => {
                 const pos = dataToCanvas(emotion.x, emotion.y);
                 const color = getEmotionColor(emotion.x, emotion.y, emotion.isSelected);
-                const radius = 6 + (emotion.dominanceLevel * 3);
+                const radius = (canvas.width / 150) + (emotion.dominanceLevel * (canvas.width / 200));
                 
                 ctx.beginPath();
                 ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
@@ -628,7 +629,7 @@
                 ctx.fill();
                 ctx.shadowBlur = 0;
                 
-                let fontDeclaration = "10px 'Jost', sans-serif";
+                let fontDeclaration = `${dynamicFontSize}px 'Jost', sans-serif`;
                 ctx.font = fontDeclaration;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
                 
@@ -648,7 +649,7 @@
             for (let i = emotionsData.length - 1; i >= 0; i--) {
                 const emotion = emotionsData[i];
                 const pos = dataToCanvas(emotion.x, emotion.y);
-                const radius = 6 + (emotion.dominanceLevel * 3);
+                const radius = (canvas.width / 150) + (emotion.dominanceLevel * (canvas.width / 200));
                 const dist = Math.sqrt(Math.pow(pos.x - canvasX, 2) + Math.pow(pos.y - canvasY, 2));
                 if (dist <= radius + 4) return emotion;
             }
@@ -903,9 +904,7 @@
             futureValueSpan.textContent = futureValue; 
             updateSliderFill(e.target);
         });
+        window.addEventListener('resize', resizeCanvas);
     </script>
 </body>
 </html>
-
-
-
